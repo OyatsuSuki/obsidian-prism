@@ -39,6 +39,7 @@
   };
   const formatScopeBadge = (sc) => (!sc || sc === 'local' ? '' : sc.startsWith('ssh:') ? 'SSH · ' + sc.slice(4) : sc.startsWith('remote:') ? 'Remote' + (sc.slice(7) ? ' · ' + sc.slice(7) : '') : '');
   const hasRealUsage = (r) => !!(r?.days && (toNum(r.calls) > 0 || Object.values(r.days).some((d) => d && (toNum(d.total || d.tokens) > 0 || toNum(d.calls) > 0))));
+  const hasPersistedTokens = (r) => !!(r?.days && (toNum(r.calls) > 0 || Object.values(r.days).some((d) => d && toNum(d.total || d.tokens) > 0)));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const getDoc = () => (typeof document !== 'undefined' ? document : null);
   const getWin = () => (typeof window !== 'undefined' ? window : G);
@@ -413,7 +414,7 @@
       const rawTitle = String((getDoc() || win?.document)?.title || '').trim();
       localSaveBlocked = curScope === 'local' && !!(usageBridge && !bridgeOnline) && (!rawTitle || /^antigravity$/i.test(rawTitle)) && !normalizeScopeKey(scOpt) && !normalizeScopeKey(win?.__agPrismScopeKey) && !bridgeScopeKey && !entries.some(([, s]) => wsUrisOf(s).some((u) => /^(?:file:\/\/|[a-z]:[\\/])/i.test(u)));
       detectedCurrentWorkspace = detectCurrentWorkspaceName(entries) || detectedCurrentWorkspace;
-      if (entries.length === 0) { usageHasData = true; if (canPrune) lastUsageFetchAt = now; renderHomePanel(); return; }
+      if (entries.length === 0) { usageHasData = true; if (canPrune) lastUsageFetchAt = now; if (seededCache) { usageDataEpoch += 1; saveUsageCache(); } renderHomePanel(); return; }
 
       const staleIds = [];
       const presentIds = new Set();
@@ -434,12 +435,13 @@
           if (!presentIds.has(oldId)) {
             const oldRec = usageRecords.get(oldId);
             if (oldRec?.subagent && oldRec?.parentId && presentIds.has(oldRec.parentId)) continue;
+            if (hasPersistedTokens(oldRec)) continue;
             usageRecords.delete(oldId); deletedAny = true;
           }
         }
       }
       if (deletedAny) usageDataEpoch += 1;
-      if (staleIds.length === 0) { usageHasData = true; if (canPrune) lastUsageFetchAt = now; if (patchedMeta) saveUsageCache(); renderHomePanel(); return; }
+      if (staleIds.length === 0) { usageHasData = true; if (canPrune) lastUsageFetchAt = now; if (patchedMeta || deletedAny) saveUsageCache(); renderHomePanel(); return; }
 
       usageLoading = true;
       if (!usageHasData) renderHomePanel();

@@ -4533,13 +4533,22 @@ export class PrismDaemon {
 
       if (action === 'list-summaries') {
         const cachedRecords = [];
+        const seenIds = new Set();
         for (const s of backendPack.list) {
           const sid = String(s?.id || '').trim();
           if (!sid) continue;
-          const hit = diskCache.get(sid.toLowerCase());
+          const key = sid.toLowerCase();
+          seenIds.add(key);
+          const hit = diskCache.get(key);
           if (hit?.record?.days) {
             cachedRecords.push({ id: sid, mode: 'full', record: hit.record });
           }
+        }
+        for (const [key, hit] of diskCache.entries()) {
+          if (seenIds.has(key) || !hit?.record?.days || !hasRealUsageRecord(hit.record)) continue;
+          const sid = String(hit.record.cascadeId || key).trim();
+          if (!sid) continue;
+          cachedRecords.push({ id: sid, mode: 'full', archived: true, record: hit.record });
         }
         return { ok: true, scopeKey, records: cachedRecords, summaries: backendPack.list };
       }
