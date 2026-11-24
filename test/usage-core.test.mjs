@@ -3497,4 +3497,90 @@ test('Deleted conversations preserve historical token usage across daemon list-s
   }
 });
 
+test('Home Studio distinguishes cumulative vs active-only sessions and toggles full-dashboard scope consistently', async () => {
+  const homeStudioPanel = require('../home-studio-panel.js');
+  const nowSec = Math.floor(Date.now() / 1000);
+  const dKey = usageCore.homeDayKey(new Date(nowSec * 1000));
+  const mkRec = (id, total, calls, extra = {}) => ({
+    cascadeId: id,
+    stepCount: 10,
+    lastModifiedSec: nowSec,
+    gmCount: calls,
+    calls,
+    workspace: 'busy-bohr',
+    days: { [dKey]: { calls, input: total, output: 0, cacheRead: 0, cacheWrite: 0, total, hours: new Array(24).fill(0), models: { 'Gemini 4': { input: total, output: 0, cacheRead: 0, cacheWrite: 0, total, calls } } } },
+    ...extra,
+  });
 
+  const liveMain = mkRec('11111111-1111-4111-8111-111111111111', 1000, 2);
+  const archMain = mkRec('22222222-2222-4222-8222-222222222222', 3000, 4, { archived: true });
+  const archSub = mkRec('33333333-3333-4333-8333-333333333333', 500, 1, { subagent: true, parentId: archMain.cascadeId });
+
+  const allAgg = usageCore.aggregateUsageRollup([liveMain, archMain, archSub], 'all', 0.1, true, new Date(nowSec * 1000), { includeArchived: true });
+  assert.equal(allAgg.sessions, 2);
+  assert.equal(allAgg.activeSessions, 1);
+  assert.equal(allAgg.archivedSessions, 1);
+  assert.equal(allAgg.tokens, 4500);
+  assert.equal(allAgg.calls, 7);
+
+  const actAgg = usageCore.aggregateUsageRollup([liveMain, archMain, archSub], 'all', 0.1, true, new Date(nowSec * 1000), { includeArchived: false });
+  assert.equal(actAgg.sessions, 1, 'Active-only mode must count only non-archived main sessions');
+  assert.equal(actAgg.activeSessions, 1);
+  assert.equal(actAgg.archivedSessions, 1, 'archivedSessions count must stay available for hidden-count subtitle');
+  assert.equal(actAgg.tokens, 1000, 'Active-only mode must exclude both archived main and its inherited subagents');
+  assert.equal(actAgg.calls, 2);
+
+  // Verify panel stamping of archived flag on deleted records
+  const prevWin = globalThis.window;
+  const prevDoc = globalThis.document;
+  const prevLs = globalThis.localStorage;
+  try {
+    const storeMem = new Map();
+    const key = 'test:scope-toggle:rollup';
+    storeMem.set(key, JSON.stringify({ [liveMain.cascadeId]: liveMain, [archMain.cascadeId]: { ...archMain, archived: false } }));
+    globalThis.localStorage = {
+      getItem: (k) => (storeMem.has(k) ? storeMem.get(k) : null),
+      setItem: (k, v) => storeMem.set(k, String(v)),
+      removeItem: (k) => storeMem.delete(k),
+    };
+    globalThis.document = { documentElement: { removeAttribute() {} }, title: 'Antigravity', querySelector: () => null };
+    globalThis.window = {
+      document: globalThis.document,
+      __agPrismUsageBridge: {
+        isOnline: () => true,
+        listSummaries: async () => ({
+          ok: true,
+          scopeKey: 'local',
+          summaries: [{ id: liveMain.cascadeId, stepCount: 10, lastModifiedSec: nowSec, workspace: 'busy-bohr' }],
+          records: [
+            { id: liveMain.cascadeId, mode: 'full', record: liveMain },
+            { id: archMain.cascadeId, mode: 'full', archived: true, record: archMain },
+          ],
+        }),
+        fetchBatch: async () => ({ ok: true, records: [] }),
+      },
+    };
+    const ctl = homeStudioPanel.createHomeStudioPanelController({
+      usageCore,
+      storageUsageCacheKey: key,
+      isDestroyed: () => false,
+      getHomeLayout: () => 'studio',
+      getLang: () => 'zh-CN',
+      uiText: () => ({}),
+      getDisplayName: () => 'Dev',
+      ensureHooks: () => ({ store: { getState: () => ({ trajectorySummaries: { summaries: { [liveMain.cascadeId]: { stepCount: 10, lastModifiedTime: { seconds: nowSec } } } } }) }, svc: {} }),
+      canMountRealCanvas: () => false,
+      setAttrIfChanged: () => {},
+      runGuardedMut: (fn) => fn(),
+    });
+    await ctl.refreshUsageRollup(true);
+    ctl.flushUsageCacheNow();
+    const saved = JSON.parse(storeMem.get(key) || '{}');
+    assert.equal(Boolean(saved[liveMain.cascadeId]?.archived), false, 'Live conversation must not be marked archived');
+    assert.equal(saved[archMain.cascadeId]?.archived, true, 'Deleted conversation must be marked archived: true');
+  } finally {
+    globalThis.window = prevWin;
+    globalThis.document = prevDoc;
+    globalThis.localStorage = prevLs;
+  }
+});

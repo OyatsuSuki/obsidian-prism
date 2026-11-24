@@ -474,6 +474,7 @@
       options && typeof options.workspace === 'string' && options.workspace && options.workspace !== 'all'
         ? options.workspace
         : '';
+    const incArch = !options || options.includeArchived !== false;
 
     const byId = new Map();
     for (let i = 0; i < list.length; i++) {
@@ -492,6 +493,14 @@
       }
       return '';
     };
+    const isArchRec = (rec) => {
+      for (let c = rec, h = 0; c && h < 5; h++) {
+        if (c.archived) return true;
+        if (!c.parentId || c.parentId === c.cascadeId) break;
+        c = byId.get(c.parentId);
+      }
+      return false;
+    };
 
     let totalTokens = 0;
     let mainTokens = 0;
@@ -500,6 +509,8 @@
     let totalInput = 0;
     let totalCacheRead = 0;
     const sessionSet = new Set();
+    const actSet = new Set();
+    const archSet = new Set();
     const subagentSessionSet = new Set();
     const activeDaySet = new Set();
     const hourCounts = new Array(24).fill(0);
@@ -511,8 +522,13 @@
     for (let i = 0; i < list.length; i++) {
       const rec = list[i];
       if (!rec || !rec.days) continue;
+      const isSub = Boolean(rec.subagent);
+      const isArch = isArchRec(rec);
       const wsId = resolveRecWorkspace(rec);
       const dayKeys = Object.keys(rec.days);
+
+      if (!isSub && isArch && (!workspaceFilter || wsId === workspaceFilter) && dayKeys.some((dk) => inRange(dk) && (toNum(rec.days[dk]?.total) > 0 || toNum(rec.days[dk]?.calls) > 0))) archSet.add(rec.cascadeId || String(i));
+      if (!incArch && isArch) continue;
 
       // Accumulate workspace index across all records in range regardless of active workspaceFilter
       if (wsId) {
@@ -558,7 +574,9 @@
           if (rec.subagent) {
             subagentSessionSet.add(rec.cascadeId || String(i));
           } else if (!countedSessionInRange) {
-            sessionSet.add(rec.cascadeId || String(i));
+            const sid = rec.cascadeId || String(i);
+            sessionSet.add(sid);
+            if (!isArch) actSet.add(sid);
             countedSessionInRange = true;
           }
         }
@@ -670,6 +688,8 @@
 
     return {
       sessions: sessionSet.size,
+      activeSessions: actSet.size,
+      archivedSessions: archSet.size,
       subagentSessions: subagentSessionSet.size,
       calls: totalCalls,
       tokens: totalTokens,
