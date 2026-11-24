@@ -3262,3 +3262,188 @@ test('Redteam #256 P1 #6: renderer-rpc-adapter merges before 1024 cap, supports 
   assert.equal(normTraj.trajectory.steps[0].metadata.createdAt, new Date((baseSec + 50000) * 1000).toISOString());
 });
 
+test('Self-referential rootConversationId on main conversations is never misclassified as subagent and auto-heals poisoned caches', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const homeStudioPanel = require('../home-studio-panel.js');
+  const { PrismDaemon } = await import('../sidecars/daemon/main.mjs');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ag-prism-self-root-'));
+  const cacheFile = path.join(tmpDir, 'usage-cache.json');
+  const nowSec = Math.floor(Date.now() / 1000);
+  const dKey = usageCore.homeDayKey(new Date(nowSec * 1000));
+  const mainId = '37df370c-2a64-4ad4-a9d6-9fd7429ea757';
+  const subId = 'd17837e3-f5b2-4220-9d1b-5bf39df8979d';
+
+  // 1) usage-core: rootConversationId === cascadeId must NOT yield self parentId or subagent=true
+  const mainSummary = {
+    cascadeId: mainId,
+    stepCount: 20,
+    lastModifiedTime: { seconds: nowSec },
+    rootConversationId: mainId,
+    trajectoryMetadata: { parentConversationId: '', rootConversationId: mainId, nestingDepth: 0 },
+  };
+  assert.equal(usageCore.isSubagentSummary(mainSummary, mainId), false);
+  const analyzedMain = usageCore.analyzeTrajectoryForUsage(
+    {
+      numTotalSteps: 20,
+      trajectory: {
+        cascadeId: mainId,
+        steps: [{ metadata: { createdAt: new Date(nowSec * 1000).toISOString() } }],
+        generatorMetadata: [{ chatModel: { model: 'Gemini 4 Neon', usage: { inputTokens: 1000, outputTokens: 200 } } }],
+      },
+    },
+    mainSummary,
+    mainId
+  );
+  assert.equal(analyzedMain.subagent, false, 'Main conversation with rootConversationId===self must stay subagent=false');
+  assert.equal(analyzedMain.parentId, '', 'Main conversation with rootConversationId===self must have empty parentId');
+
+  // Real subagent (parentConversationId !== self) must remain subagent=true
+  const subSummary = {
+    cascadeId: subId,
+    stepCount: 8,
+    lastModifiedTime: { seconds: nowSec },
+    parentConversationId: mainId,
+    rootConversationId: mainId,
+    trajectoryMetadata: { parentConversationId: mainId, rootConversationId: mainId, nestingDepth: 1 },
+  };
+  assert.equal(usageCore.isSubagentSummary(subSummary, subId), true);
+
+  // 2) aggregateUsageRollup auto-heals legacy poisoned { cascadeId: X, parentId: X, subagent: true } records
+  const poisonedMainRec = {
+    cascadeId: mainId,
+    stepCount: 20,
+    lastModifiedSec: nowSec,
+    gmCount: 5,
+    subagent: true,
+    workspace: 'PCL',
+    parentId: mainId,
+    calls: 5,
+    days: { [dKey]: { calls: 5, input: 1000, output: 200, cacheRead: 0, cacheWrite: 0, total: 1200, hours: new Array(24).fill(0), models: { 'Gemini 4': { input: 1000, output: 200, cacheRead: 0, cacheWrite: 0, total: 1200, calls: 5 } } } },
+  };
+  const realSubRec = {
+    cascadeId: subId,
+    stepCount: 8,
+    lastModifiedSec: nowSec,
+    gmCount: 2,
+    subagent: true,
+    workspace: 'PCL',
+    parentId: mainId,
+    calls: 2,
+    days: { [dKey]: { calls: 2, input: 300, output: 100, cacheRead: 0, cacheWrite: 0, total: 400, hours: new Array(24).fill(0), models: { 'Gemini 4': { input: 300, output: 100, cacheRead: 0, cacheWrite: 0, total: 400, calls: 2 } } } },
+  };
+  const agg = usageCore.aggregateUsageRollup([poisonedMainRec, realSubRec], 'all', 0.1, true, new Date(nowSec * 1000));
+  assert.equal(agg.sessions, 1, 'Self-parent poisoned main record must be counted as a main session');
+  assert.equal(agg.subagentSessions, 1, 'Real subagent must still be counted as a subagent session');
+  assert.equal(agg.mainTokens, 1200, 'Poisoned main tokens must count under mainTokens, not subagentTokens');
+  assert.equal(agg.subagentTokens, 400);
+
+  // 3) Daemon disk cache auto-heals poisoned self-parent record on load & strips self rootId in summaries
+  fs.writeFileSync(
+    cacheFile,
+    JSON.stringify({
+      version: 2,
+      scopes: {
+        local: {
+          [mainId]: { stepCount: 20, lastModifiedSec: nowSec, record: poisonedMainRec },
+          [subId]: { stepCount: 8, lastModifiedSec: nowSec, record: realSubRec },
+        },
+      },
+    }),
+    'utf8'
+  );
+  const repoRoot = path.resolve(require('node:url').fileURLToPath(import.meta.url), '..', '..');
+  const daemon = new PrismDaemon({ rootDir: repoRoot, usageCachePath: cacheFile, silent: true });
+  daemon._discoverLocalAppConversations = () => [];
+  daemon._lazyLsClient = {
+    server: { port: 12349, mode: 'http' },
+    call: async (method) => {
+      if (method === 'GetAllCascadeTrajectories') {
+        return {
+          trajectorySummaries: {
+            [mainId]: { stepCount: 20, lastModifiedTime: { seconds: String(nowSec) }, trajectoryMetadata: { parentConversationId: '', rootConversationId: mainId, nestingDepth: 0 } },
+            [subId]: { stepCount: 8, lastModifiedTime: { seconds: String(nowSec) }, trajectoryMetadata: { parentConversationId: mainId, rootConversationId: mainId, nestingDepth: 1 } },
+          },
+        };
+      }
+      return {};
+    },
+  };
+  const listRes = await daemon.fetchUsageRollupBatch([], { action: 'list-summaries', scopeKey: 'local' });
+  const mainSumOut = listRes.summaries.find((s) => s.id === mainId);
+  const mainRecOut = listRes.records.find((r) => r.id === mainId)?.record;
+  const subRecOut = listRes.records.find((r) => r.id === subId)?.record;
+  assert.equal(mainSumOut?.subagent, false, 'Daemon summary for main conv must have subagent=false');
+  assert.equal(mainSumOut?.rootId, undefined, 'Daemon summary must strip self-referential rootId');
+  assert.equal(mainRecOut?.subagent, false, 'Daemon disk cache must auto-heal poisoned main record subagent->false');
+  assert.equal(mainRecOut?.parentId, '', 'Daemon disk cache must auto-heal poisoned self parentId->empty');
+  assert.equal(subRecOut?.subagent, true, 'Real subagent record must stay subagent=true');
+
+  // 4) home-studio-panel heals poisoned localStorage and does not send subagent=true for rootId===self
+  const prevWin = globalThis.window;
+  const prevDoc = globalThis.document;
+  const prevLs = globalThis.localStorage;
+  try {
+    const storeMem = new Map();
+    const key = 'test:self-root:rollup';
+    storeMem.set(key, JSON.stringify({ [mainId]: poisonedMainRec, [subId]: realSubRec }));
+    globalThis.localStorage = {
+      getItem: (k) => (storeMem.has(k) ? storeMem.get(k) : null),
+      setItem: (k, v) => storeMem.set(k, String(v)),
+      removeItem: (k) => storeMem.delete(k),
+    };
+    globalThis.document = { documentElement: { removeAttribute() {} }, title: 'Antigravity', querySelector: () => null };
+    let capturedBatchItems = [];
+    globalThis.window = {
+      document: globalThis.document,
+      __agPrismUsageBridge: {
+        isOnline: () => true,
+        listSummaries: async () => ({
+          ok: true,
+          scopeKey: 'local',
+          summaries: [{ id: mainId, stepCount: 25, lastModifiedSec: nowSec + 10, rootId: mainId, rootConversationId: mainId, workspace: 'PCL' }],
+          records: [{ id: mainId, mode: 'full', record: poisonedMainRec }],
+        }),
+        fetchBatch: async (items) => {
+          capturedBatchItems = items;
+          return {
+            ok: true,
+            records: items.map((it) => ({
+              id: it.id,
+              mode: 'full',
+              record: { ...poisonedMainRec, stepCount: it.stepCount, lastModifiedSec: it.lastModifiedSec, subagent: it.subagent, parentId: it.parentId },
+            })),
+          };
+        },
+      },
+    };
+    const ctl = homeStudioPanel.createHomeStudioPanelController({
+      usageCore,
+      storageUsageCacheKey: key,
+      isDestroyed: () => false,
+      getHomeLayout: () => 'studio',
+      getLang: () => 'zh-CN',
+      uiText: () => ({}),
+      getDisplayName: () => 'Dev',
+      ensureHooks: () => ({ store: { getState: () => ({ trajectorySummaries: { summaries: { [mainId]: { stepCount: 25, lastModifiedTime: { seconds: nowSec + 10 }, rootConversationId: mainId } } } }) }, svc: {} }),
+      canMountRealCanvas: () => false,
+      setAttrIfChanged: () => {},
+      runGuardedMut: (fn) => fn(),
+    });
+    await ctl.refreshUsageRollup(true);
+    assert.equal(capturedBatchItems.length, 1);
+    assert.equal(capturedBatchItems[0].subagent, false, 'home-studio-panel must NOT send subagent=true when rootId===self');
+    assert.equal(capturedBatchItems[0].parentId, '', 'home-studio-panel must NOT send self parentId when rootId===self');
+    ctl.flushUsageCacheNow();
+    const saved = JSON.parse(storeMem.get(key) || '{}');
+    assert.equal(saved[mainId]?.subagent, false, 'Saved localStorage main record must be healed to subagent=false');
+    assert.equal(saved[mainId]?.parentId, '', 'Saved localStorage main record must have empty parentId');
+    assert.equal(saved[subId]?.subagent, true, 'Saved localStorage real subagent must remain subagent=true');
+  } finally {
+    globalThis.window = prevWin;
+    globalThis.document = prevDoc;
+    globalThis.localStorage = prevLs;
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});

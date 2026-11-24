@@ -220,6 +220,16 @@ export function resolveUsageScopeKey({ explicitScopeKey = '', entry = null, item
   return 'local';
 }
 
+function sanitizeUsageRecord(id, record) {
+  if (!record || typeof record !== 'object') return record;
+  const self = String(id || record.cascadeId || '').trim().toLowerCase();
+  const pid = String(record.parentId || '').trim().toLowerCase();
+  if (self && pid && pid === self) {
+    return { ...record, parentId: '', subagent: false };
+  }
+  return record;
+}
+
 function hasRealUsageRecord(record) {
   if (!record || typeof record !== 'object' || !record.days || typeof record.days !== 'object') return false;
   if (Number(record.calls || 0) > 0) return true;
@@ -4125,7 +4135,7 @@ export class PrismDaemon {
         const id = String(rawId || sum?.cascadeId || sum?.id || '').trim();
         if (!GUID_RE.test(id) || !sum || typeof sum !== 'object') continue;
         const meta = sum.trajectoryMetadata && typeof sum.trajectoryMetadata === 'object' ? sum.trajectoryMetadata : {};
-        const parentId = String(
+        const rawParentId = String(
           sum.parentConversationId ||
             meta.parentConversationId ||
             sum.parentCascadeId ||
@@ -4134,11 +4144,13 @@ export class PrismDaemon {
             meta.parentTrajectoryId ||
             ''
         ).trim();
-        const rootId = String(
+        const parentId = rawParentId && rawParentId.toLowerCase() !== id.toLowerCase() ? rawParentId : '';
+        const rawRootId = String(
           sum.rootConversationId || meta.rootConversationId || sum.rootCascadeId || meta.rootCascadeId || ''
         ).trim();
+        const rootId = rawRootId && rawRootId.toLowerCase() !== id.toLowerCase() ? rawRootId : '';
         const subagent = Boolean(
-          (typeof usageCore?.isSubagentSummary === 'function' && usageCore.isSubagentSummary(sum)) ||
+          (typeof usageCore?.isSubagentSummary === 'function' && usageCore.isSubagentSummary(sum, id)) ||
             parentId ||
             Number(meta.nestingDepth || sum.nestingDepth || 0) > 0 ||
             sum.isSubagent ||
@@ -4302,16 +4314,19 @@ export class PrismDaemon {
     if (this._usageDiskCache instanceof Map) return this._usageDiskCache;
     const scopesMap = new Map();
     const cacheFile = this._resolveUsageCachePath();
+    let healedAny = false;
     const parseScopeEntries = (obj) => {
       const m = new Map();
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return m;
       for (const [k, v] of Object.entries(obj)) {
         if (m.size >= USAGE_CACHE_MAX_PER_SCOPE) break;
         if (GUID_RE.test(k) && v && v.record?.days && Number(v.stepCount) > 0 && Number(v.lastModifiedSec) > 0) {
+          const clean = sanitizeUsageRecord(k, v.record);
+          if (clean !== v.record) healedAny = true;
           m.set(k.toLowerCase(), {
             stepCount: Number(v.stepCount),
             lastModifiedSec: Number(v.lastModifiedSec),
-            record: v.record,
+            record: clean,
           });
         }
       }
@@ -4350,6 +4365,16 @@ export class PrismDaemon {
       }
     } catch {}
     this._usageDiskCache = scopesMap;
+    if (healedAny) {
+      this._usageCacheDirty = true;
+      if (!this._usageCacheTimer) {
+        this._usageCacheTimer = setTimeout(() => {
+          this._usageCacheTimer = null;
+          this._flushUsageDiskCache();
+        }, 1500);
+        this._usageCacheTimer.unref?.();
+      }
+    }
     return scopesMap;
   }
 
@@ -4378,11 +4403,12 @@ export class PrismDaemon {
     const bucket = this._getUsageDiskCacheScope(safeScope, true);
     const key = id.toLowerCase();
     const existing = bucket.get(key);
+    const cleanRec = sanitizeUsageRecord(id, record);
     // 保护：绝不用空统计覆盖已有真实非空统计
-    if (existing && hasRealUsageRecord(existing.record) && !hasRealUsageRecord(record)) {
+    if (existing && hasRealUsageRecord(existing.record) && !hasRealUsageRecord(cleanRec)) {
       return;
     }
-    bucket.set(key, { stepCount: sc, lastModifiedSec: lm, record });
+    bucket.set(key, { stepCount: sc, lastModifiedSec: lm, record: cleanRec });
     this._usageCacheDirty = true;
     if (!this._usageCacheTimer) {
       this._usageCacheTimer = setTimeout(() => {
@@ -4559,9 +4585,13 @@ export class PrismDaemon {
         const stepCount = Math.max(0, Number(item.stepCount || backendSum?.stepCount || 0));
         const lastModifiedSec = Math.max(0, Number(item.lastModifiedSec || backendSum?.lastModifiedSec || 0));
         const createdSec = Math.max(0, Number(item.createdSec || backendSum?.createdSec || lastModifiedSec || 0));
-        const subagent = Boolean(item.subagent || backendSum?.subagent);
-        const parentId = String(item.parentId || backendSum?.parentId || '').trim();
-        const rootId = String(item.rootId || backendSum?.rootId || '').trim();
+        const rawItemPid = String(item.parentId || '').trim();
+        const itemSelfPoison = Boolean(rawItemPid && rawItemPid.toLowerCase() === id.toLowerCase());
+        const rawPid = String((itemSelfPoison ? '' : rawItemPid) || backendSum?.parentId || '').trim();
+        const parentId = rawPid && rawPid.toLowerCase() !== id.toLowerCase() ? rawPid : '';
+        const rawRid = String(item.rootId || backendSum?.rootId || '').trim();
+        const rootId = rawRid && rawRid.toLowerCase() !== id.toLowerCase() ? rawRid : '';
+        const subagent = Boolean((itemSelfPoison ? false : item.subagent) || backendSum?.subagent || parentId);
         const workspace = String(item.workspace || backendSum?.workspace || '');
         const workspaces = Array.isArray(item.workspaces) && item.workspaces.length
           ? item.workspaces
@@ -4570,13 +4600,14 @@ export class PrismDaemon {
         const diskHit = diskCache.get(id.toLowerCase()) || null;
         if (!opts?.force && stepCount > 0 && lastModifiedSec > 0) {
           if (diskHit && diskHit.stepCount === stepCount && diskHit.lastModifiedSec === lastModifiedSec && diskHit.record?.days) {
+            const cleanHitRec = sanitizeUsageRecord(id, diskHit.record);
             records.push({
               id,
               mode: 'full',
-              subagent: Boolean(diskHit.record.subagent || subagent),
+              subagent: Boolean(cleanHitRec.subagent || subagent),
               ...(parentId ? { parentId } : {}),
               ...(workspace ? { workspace } : {}),
-              record: diskHit.record,
+              record: cleanHitRec,
             });
             continue;
           }

@@ -38,6 +38,8 @@
     return extractScopeFromUri(s);
   };
   const formatScopeBadge = (sc) => (!sc || sc === 'local' ? '' : sc.startsWith('ssh:') ? 'SSH · ' + sc.slice(4) : sc.startsWith('remote:') ? 'Remote' + (sc.slice(7) ? ' · ' + sc.slice(7) : '') : '');
+  const eqId = (a, b) => !!(a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase());
+  const fixRec = (id, r) => (r && eqId(r.parentId, id || r.cascadeId) ? { ...r, parentId: '', subagent: false } : r);
   const hasRealUsage = (r) => !!(r?.days && (toNum(r.calls) > 0 || Object.values(r.days).some((d) => d && (toNum(d.total || d.tokens) > 0 || toNum(d.calls) > 0))));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const getDoc = () => (typeof document !== 'undefined' ? document : null);
@@ -165,7 +167,7 @@
         const ls = getLs();
         const raw = ls && JSON.parse(ls.getItem(scopeStorageKey(sc)) || '{}');
         if (raw && typeof raw === 'object') {
-          for (const [id, rec] of Object.entries(raw)) if (rec?.days) usageRecords.set(id, rec);
+          for (const [id, rec] of Object.entries(raw)) if (rec?.days) usageRecords.set(id, fixRec(id, rec));
           if (usageRecords.size > 0) { usageHasData = true; usageDataEpoch += 1; }
         }
       } catch {}
@@ -211,18 +213,22 @@
     };
 
     const toSec = (n, o, iso) => { const s = toNum(n || o?.seconds); if (s) return s; const t = typeof o === 'string' ? o : iso; return typeof t === 'string' ? Math.floor((Date.parse(t) || 0) / 1000) : 0; };
-    const extractMeta = (sum) => {
+    const extractMeta = (sum, id) => {
       const tm = sum?.trajectoryMetadata;
+      const s = String(id || sum?.id || sum?.cascadeId || '').trim();
       const workspace = usageCore?.extractWorkspaceId ? usageCore.extractWorkspaceId(sum) : String(sum?.workspace || '');
-      const parentId = String(tm?.parentConversationId || sum?.parentConversationId || sum?.parentId || sum?.rootConversationId || sum?.rootId || '').trim();
-      return { workspace, u: wsUrisOf(sum), parentId, subagent: !!(sum?.subagent || parentId || usageCore?.isSubagentSummary?.(sum)), lastModifiedSec: toSec(sum?.lastModifiedSec, sum?.lastModifiedTime, sum?.modifiedAt), createdSec: toSec(sum?.createdSec, sum?.createdTime, sum?.createdAt), stepCount: toNum(sum?.stepCount ?? sum?.steps ?? 0) };
+      const rp = String(tm?.parentConversationId || sum?.parentConversationId || sum?.parentId || sum?.rootConversationId || sum?.rootId || '').trim();
+      const parentId = rp && !eqId(rp, s) ? rp : '';
+      const subagent = !!(parentId || usageCore?.isSubagentSummary?.(sum, s) || (sum?.subagent && !eqId(sum?.parentId, s)));
+      return { workspace, u: wsUrisOf(sum), parentId, subagent, lastModifiedSec: toSec(sum?.lastModifiedSec, sum?.lastModifiedTime, sum?.modifiedAt), createdSec: toSec(sum?.createdSec, sum?.createdTime, sum?.createdAt), stepCount: toNum(sum?.stepCount ?? sum?.steps ?? 0) };
     };
 
     const advanceCachedCursor = (prev, id, sum, defer) => {
-      const m = extractMeta(sum);
+      const m = extractMeta(sum, id);
+      const p = fixRec(id, prev);
       const tail = defer ? { _do: 1 } : null;
-      if (prev?.days) {
-        return { ...prev, stepCount: m.stepCount, lastModifiedSec: m.lastModifiedSec, subagent: prev.subagent || m.subagent, workspace: m.workspace || prev.workspace || '', parentId: m.parentId || prev.parentId || '', ...tail };
+      if (p?.days) {
+        return { ...p, stepCount: m.stepCount, lastModifiedSec: m.lastModifiedSec, subagent: !!(p.subagent || m.subagent), workspace: m.workspace || p.workspace || '', parentId: m.parentId || p.parentId || '', ...tail };
       }
       const sec = m.lastModifiedSec || m.createdSec || 0;
       const days = {};
@@ -245,8 +251,8 @@
       } catch {}
       let latestSec = 0;
       let latestWs = '';
-      for (const [, sum] of entries || []) {
-        const m = extractMeta(sum);
+      for (const [eid, sum] of entries || []) {
+        const m = extractMeta(sum, eid);
         if (!m.subagent && m.workspace && m.lastModifiedSec >= latestSec) { latestSec = m.lastModifiedSec; latestWs = m.workspace; }
       }
       return latestWs;
@@ -386,8 +392,8 @@
             if (!sumsMap.has(sid)) sumsMap.set(sid, item);
             else {
               const cur = sumsMap.get(sid);
-              const im = extractMeta(item);
-              const cm = extractMeta(cur);
+              const im = extractMeta(item, sid);
+              const cm = extractMeta(cur, sid);
               if (item.workspace && !cur.workspace && !cur.workspaces) cur.workspace = item.workspace;
               if (im.u.length && !cur.workspaces) cur.workspaces = im.u;
               if (im.parentId && !cm.parentId) cur.parentId = im.parentId;
@@ -402,7 +408,8 @@
       for (const hit of Array.isArray(bridgeRecs) ? bridgeRecs : []) {
         if (!hit?.id || !hit.record?.days) continue;
         const cur = usageRecords.get(hit.id);
-        if (!cur || ((cur._do || !hasRealUsage(cur)) && hasRealUsage(hit.record))) { usageRecords.set(hit.id, hit.record); seededCache = true; }
+        const cr = fixRec(hit.id, hit.record);
+        if (!cur || eqId(cur.parentId, hit.id) || ((cur._do || !hasRealUsage(cur)) && hasRealUsage(cr))) { usageRecords.set(hit.id, cr); seededCache = true; }
       }
 
       if (curScope === 'local' && Array.isArray(liveQuotaSnap?.conversations)) {
@@ -420,13 +427,17 @@
       let patchedMeta = seededCache;
       for (const [id, sum] of entries) {
         presentIds.add(id);
-        const m = extractMeta(sum);
+        const m = extractMeta(sum, id);
         const cached = usageRecords.get(id);
         if (!cached || (bridgeOnline && cached._do) || toNum(cached.stepCount) !== m.stepCount || toNum(cached.lastModifiedSec) !== m.lastModifiedSec) staleIds.push([id, sum]);
-        else if ((m.workspace && !cached.workspace) || (m.parentId && !cached.parentId)) { cached.workspace ||= m.workspace; cached.parentId ||= m.parentId; patchedMeta = true; }
+        else if (eqId(cached.parentId, id) || (m.workspace && !cached.workspace) || (m.parentId && !cached.parentId)) {
+          const nc = fixRec(id, cached);
+          usageRecords.set(id, { ...nc, workspace: nc.workspace || m.workspace || '', parentId: nc.parentId || m.parentId || '' });
+          patchedMeta = true;
+        }
       }
       if (patchedMeta) usageDataEpoch += 1;
-      staleIds.sort((a, b) => extractMeta(b[1]).lastModifiedSec - extractMeta(a[1]).lastModifiedSec);
+      staleIds.sort((a, b) => extractMeta(b[1], b[0]).lastModifiedSec - extractMeta(a[1], a[0]).lastModifiedSec);
 
       let deletedAny = false;
       if (canPrune) {
@@ -445,7 +456,7 @@
       if (!usageHasData) renderHomePanel();
       const applyRecord = (id, sum, prev, rec, m) => {
         if (hasRealUsage(prev) && !hasRealUsage(rec)) usageRecords.set(id, advanceCachedCursor(prev, id, sum, true));
-        else { const n = { ...rec, subagent: !!(rec.subagent || m.subagent), workspace: rec.workspace || m.workspace || '', parentId: rec.parentId || m.parentId || '' }; delete n._do; usageRecords.set(id, n); }
+        else { const cr = fixRec(id, rec); const n = { ...cr, subagent: !!(cr.subagent || m.subagent), workspace: cr.workspace || m.workspace || '', parentId: cr.parentId || m.parentId || '' }; delete n._do; usageRecords.set(id, n); }
       };
       try {
         if (usageBridge && isFn(usageBridge.fetchBatch) && bridgeOnline) {
@@ -453,7 +464,7 @@
             const slice = staleIds.slice(i, i + 6);
             const reqItems = slice.map(([id, sum]) => {
               const c = usageRecords.get(id);
-              const m = extractMeta(sum);
+              const m = extractMeta(sum, id);
               const gm = toNum(c?.gmCount);
               return { id, stepCount: m.stepCount, lastModifiedSec: m.lastModifiedSec, createdSec: m.createdSec, subagent: m.subagent, workspace: m.workspace, ...(m.u.length ? { workspaces: m.u } : {}), parentId: m.parentId, gmOffset: c && !c._do && Number.isInteger(gm) && gm > 0 ? gm : 0 };
             });
@@ -462,12 +473,12 @@
             for (const [id, sum] of slice) {
               const prev = usageRecords.get(id);
               const hit = byId?.get(id);
-              const m = extractMeta(sum);
+              const m = extractMeta(sum, id);
               if (hit?.mode === 'full' && hit.record) applyRecord(id, sum, prev, hit.record, m);
               else if (hit?.mode === 'delta' && hit.delta && usageCore.mergeUsageRecordDelta) {
-                const nr = usageCore.mergeUsageRecordDelta(prev, hit.delta, { cascadeId: id, stepCount: m.stepCount, lastModifiedSec: m.lastModifiedSec, gmCount: toNum(hit.gmCount), subagent: m.subagent, workspace: m.workspace, parentId: m.parentId });
+                const nr = usageCore.mergeUsageRecordDelta(fixRec(id, prev), hit.delta, { cascadeId: id, stepCount: m.stepCount, lastModifiedSec: m.lastModifiedSec, gmCount: toNum(hit.gmCount), subagent: m.subagent, workspace: m.workspace, parentId: m.parentId });
                 if (nr && typeof nr === 'object') delete nr._do;
-                usageRecords.set(id, nr);
+                usageRecords.set(id, fixRec(id, nr));
               } else usageRecords.set(id, advanceCachedCursor(prev, id, sum, true));
             }
             if (i + 6 < staleIds.length && !isDestroyed()) await sleep(40);
@@ -478,7 +489,7 @@
           for (let i = 0; i < staleIds.length && !isDestroyed(); i += CONC) {
             await Promise.all(staleIds.slice(i, i + CONC).map(async ([id, sum]) => {
               const prev = usageRecords.get(id);
-              const m = extractMeta(sum);
+              const m = extractMeta(sum, id);
               if (!canDirect || m.stepCount > 240) { usageRecords.set(id, advanceCachedCursor(prev, id, sum, true)); return; }
               try {
                 let tId = null;

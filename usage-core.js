@@ -202,11 +202,15 @@
     return 'unknown';
   }
 
-  function isSubagentSummary(summary) {
+  function eqId(a, b) { return Boolean(a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase()); }
+
+  function isSubagentSummary(summary, selfId) {
     if (!summary || typeof summary !== 'object') return false;
-    if (summary.subagent === true) return true;
+    const s = String(selfId || summary.cascadeId || summary.id || '').trim();
     const meta = summary.trajectoryMetadata || {};
-    return Boolean(meta.parentConversationId || summary.parentConversationId) || toNum(meta.nestingDepth) > 0;
+    const p = String(meta.parentConversationId || summary.parentConversationId || '').trim();
+    if ((p && !eqId(p, s)) || toNum(meta.nestingDepth) > 0) return true;
+    return summary.subagent === true && !eqId(summary.parentId, s);
   }
 
   function normalizeWorkspaceLabel(rawUriOrPath) {
@@ -244,14 +248,10 @@
     return normalizeWorkspaceLabel(candidate);
   }
 
-  function extractParentConversationId(summaryObj, trajObj) {
-    const pid =
-      summaryObj?.trajectoryMetadata?.parentConversationId ||
-      summaryObj?.parentConversationId ||
-      summaryObj?.rootConversationId ||
-      trajObj?.metadata?.parentConversationId ||
-      '';
-    return String(pid || '').trim();
+  function extractParentConversationId(summaryObj, trajObj, selfId) {
+    const s = String(selfId || summaryObj?.cascadeId || summaryObj?.id || trajObj?.cascadeId || '').trim();
+    const p = String(summaryObj?.trajectoryMetadata?.parentConversationId || summaryObj?.parentConversationId || summaryObj?.rootConversationId || trajObj?.metadata?.parentConversationId || '').trim();
+    return p && !eqId(p, s) ? p : '';
   }
 
   // Extract a compact, JSON-serializable per-conversation usage record for caching.
@@ -352,14 +352,14 @@
       toNum(summaryObj?.lastModifiedTime?.seconds) ||
       (lastModMs > 0 ? Math.floor(lastModMs / 1000) : 0);
     const workspace = extractWorkspaceId(summaryObj, t);
-    const parentId = extractParentConversationId(summaryObj, t);
+    const parentId = extractParentConversationId(summaryObj, t, cascadeId);
 
     return {
       cascadeId: String(cascadeId || t.cascadeId || ''),
       stepCount: Math.max(toNum(summaryObj?.stepCount), toNum(trajObj?.numTotalSteps), steps.length),
       lastModifiedSec,
       gmCount: toNum(trajObj?.numTotalGeneratorMetadata ?? gmList.length),
-      subagent: isSubagentSummary(summaryObj),
+      subagent: isSubagentSummary(summaryObj, cascadeId),
       workspace,
       parentId,
       calls,
@@ -431,14 +431,17 @@
         }
       }
     }
+    const cid = String(nextMeta.cascadeId ?? deltaRec?.cascadeId ?? baseRec.cascadeId ?? '');
+    const p = String(nextMeta.parentId ?? deltaRec?.parentId ?? baseRec.parentId ?? '').trim();
+    const sp = eqId(p, cid);
     return {
-      cascadeId: String(nextMeta.cascadeId ?? deltaRec?.cascadeId ?? baseRec.cascadeId ?? ''),
+      cascadeId: cid,
       stepCount: toNum(nextMeta.stepCount ?? deltaRec?.stepCount ?? baseRec.stepCount ?? 0),
       lastModifiedSec: toNum(nextMeta.lastModifiedSec ?? deltaRec?.lastModifiedSec ?? baseRec.lastModifiedSec ?? 0),
       gmCount: toNum(nextMeta.gmCount ?? deltaRec?.gmCount ?? baseRec.gmCount ?? 0),
-      subagent: Boolean(nextMeta.subagent ?? deltaRec?.subagent ?? baseRec.subagent),
+      subagent: sp ? false : Boolean(nextMeta.subagent ?? deltaRec?.subagent ?? baseRec.subagent),
       workspace: String(nextMeta.workspace ?? deltaRec?.workspace ?? baseRec.workspace ?? ''),
-      parentId: String(nextMeta.parentId ?? deltaRec?.parentId ?? baseRec.parentId ?? ''),
+      parentId: sp ? '' : p,
       calls: toNum(baseRec.calls) + toNum(deltaRec?.calls),
       days,
     };
@@ -511,6 +514,7 @@
     for (let i = 0; i < list.length; i++) {
       const rec = list[i];
       if (!rec || !rec.days) continue;
+      const isSub = Boolean(rec.subagent && !eqId(rec.parentId, rec.cascadeId));
       const wsId = resolveRecWorkspace(rec);
       const dayKeys = Object.keys(rec.days);
 
@@ -528,7 +532,7 @@
           if (!day) continue;
           const dt = toNum(day.total);
           wsEntry.tokens += dt;
-          if (!rec.subagent && (dt > 0 || toNum(day.calls) > 0)) {
+          if (!isSub && (dt > 0 || toNum(day.calls) > 0)) {
             wsEntry.sessionsSet.add(rec.cascadeId || String(i));
           }
         }
@@ -555,7 +559,7 @@
         const dCalls = toNum(day.calls);
         if (dTotal > 0 || dCalls > 0) {
           activeDaySet.add(dk);
-          if (rec.subagent) {
+          if (isSub) {
             subagentSessionSet.add(rec.cascadeId || String(i));
           } else if (!countedSessionInRange) {
             sessionSet.add(rec.cascadeId || String(i));
@@ -563,7 +567,7 @@
           }
         }
         totalTokens += dTotal;
-        if (rec.subagent) subagentTokens += dTotal;
+        if (isSub) subagentTokens += dTotal;
         else mainTokens += dTotal;
         totalCalls += dCalls;
         const dCacheRead = toNum(day.cacheRead);
@@ -599,9 +603,9 @@
             entry.cacheRead += toNum(mData.cacheRead);
             entry.cacheWrite += toNum(mData.cacheWrite);
             entry.tokens += mTok;
-            if (rec.subagent) entry.subagentTokens += mTok;
+            if (isSub) entry.subagentTokens += mTok;
             entry.calls += toNum(mData.calls);
-            if (!rec.subagent) entry.sessionsSet.add(rec.cascadeId || String(i));
+            if (!isSub) entry.sessionsSet.add(rec.cascadeId || String(i));
           }
         }
       }
