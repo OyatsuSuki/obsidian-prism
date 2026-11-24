@@ -481,25 +481,14 @@
       const r = list[i];
       if (r && r.cascadeId) byId.set(r.cascadeId, r);
     }
-    const resolveRecWorkspace = (rec) => {
-      if (!rec) return '';
-      if (rec.workspace) return String(rec.workspace);
-      let cur = rec;
-      for (let hop = 0; hop < 4 && cur && cur.parentId; hop++) {
-        const p = byId.get(cur.parentId);
-        if (!p) break;
-        if (p.workspace) return String(p.workspace);
-        cur = p;
-      }
-      return '';
-    };
-    const isArchRec = (rec) => {
+    const walkRec = (rec, fn) => {
       for (let c = rec, h = 0; c && h < 5; h++) {
-        if (c.archived) return true;
+        const v = fn(c);
+        if (v) return v;
         if (!c.parentId || c.parentId === c.cascadeId) break;
         c = byId.get(c.parentId);
       }
-      return false;
+      return '';
     };
 
     let totalTokens = 0;
@@ -523,8 +512,8 @@
       const rec = list[i];
       if (!rec || !rec.days) continue;
       const isSub = Boolean(rec.subagent);
-      const isArch = isArchRec(rec);
-      const wsId = resolveRecWorkspace(rec);
+      const isArch = Boolean(walkRec(rec, (c) => c.archived));
+      const wsId = String(walkRec(rec, (c) => c.workspace) || '');
       const dayKeys = Object.keys(rec.days);
 
       if (!isSub && isArch && (!workspaceFilter || wsId === workspaceFilter) && dayKeys.some((dk) => inRange(dk) && (toNum(rec.days[dk]?.total) > 0 || toNum(rec.days[dk]?.calls) > 0))) archSet.add(rec.cascadeId || String(i));

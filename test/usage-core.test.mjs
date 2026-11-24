@@ -3578,6 +3578,9 @@ test('Home Studio distinguishes cumulative vs active-only sessions and toggles f
     const saved = JSON.parse(storeMem.get(key) || '{}');
     assert.equal(Boolean(saved[liveMain.cascadeId]?.archived), false, 'Live conversation must not be marked archived');
     assert.equal(saved[archMain.cascadeId]?.archived, true, 'Deleted conversation must be marked archived: true');
+    const hspSrc = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'home-studio-panel.js'), 'utf8');
+    assert.equal(hspSrc.includes('⇄'), false, 'Session scope toggle must use vector SVG icon instead of Unicode ⇄ arrow');
+    assert.ok(hspSrc.includes('M2 4h8M8 2l2 2-2 2M10 8H2M4 6 2 8l2 2'), 'Session scope toggle must render inline vector swap SVG');
   } finally {
     globalThis.window = prevWin;
     globalThis.document = prevDoc;

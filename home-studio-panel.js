@@ -14,7 +14,7 @@
   }
 
   const STUDIO_HEAD_CSS = '.ag-cs-home-panel-head{flex-wrap:wrap;row-gap:8px}';
-  const STUDIO_EXTRA_CSS = STUDIO_HEAD_CSS + '.agy-home{--_a:var(--ag-cs-accent,var(--primary,#2563eb));--_m:var(--muted-foreground);--_b:var(--ag-cs-border-1,rgba(148,163,184,.2));--_p:var(--ag-cs-pill-bg,rgba(128,138,158,.08))}.ag-cs-home-tab,.ag-cs-home-range{white-space:nowrap}.ag-cs-home-head-left,.ag-cs-home-head-right{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.ag-cs-home-head-left{min-width:0}.ag-cs-home-scope-badge,.ag-cs-home-stat-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-cs-home-scope-badge,.ag-cs-quota-pace,.ag-cs-quota-bar,.ag-cs-qbar-solid{border-radius:999px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-card{border:1px solid var(--_b);background:var(--_p)}.ag-cs-home-ws-select,.ag-cs-quota-refresh{border-radius:var(--ag-cs-r-sm,6px);cursor:pointer}.ag-cs-home-ws-select,.ag-cs-quota-toolbar,.ag-cs-quota-refresh,.ag-cs-quota-win-row,.ag-cs-quota-win-val{font-size:11px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-name,.ag-cs-quota-win-val{color:var(--foreground)}.ag-cs-home-scope-badge,.ag-cs-quota-name,.ag-cs-quota-pace,.ag-cs-quota-win-val{font-weight:600}.ag-cs-quota-wrap,.ag-cs-quota-card,.ag-cs-quota-win{display:flex;flex-direction:column}.ag-cs-home-stat-sub,.ag-cs-quota-card,.ag-cs-quota-win-val{font-variant-numeric:tabular-nums}.ag-cs-home-stat-sub,.ag-cs-quota-foot{font-size:10px;color:var(--_m);opacity:.82}.ag-cs-home-scope-badge{display:inline-flex;align-items:center;height:20px;max-width:168px;padding:0 7px;font-size:10.5px;color:var(--_a);border:1px solid color-mix(in srgb,currentColor 32%,transparent);background:color-mix(in srgb,currentColor 11%,transparent)}.ag-cs-home-ws-select{height:24px;max-width:156px;padding:0 20px 0 8px;color-scheme:inherit;font-weight:500;outline:none;text-overflow:ellipsis}.ag-cs-home-ws-select option{background:var(--card,#141418);color:var(--foreground,#F2F2F5);}.ag-cs-home-stat-sub{display:block;margin-top:2px;line-height:1.25}.ag-cs-hs-tg{background:0 0;border:0;padding:0;text-align:left;cursor:pointer;font:inherit}.ag-cs-hs-tg:hover{color:var(--foreground);opacity:1}.ag-cs-quota-wrap{gap:10px;margin-top:4px;position:relative;z-index:1}.ag-cs-quota-toolbar,.ag-cs-quota-card-head,.ag-cs-quota-win-row{display:flex;align-items:center;justify-content:space-between;gap:6px}.ag-cs-quota-toolbar{color:var(--_m)}.ag-cs-quota-refresh{height:23px;padding:0 9px}.ag-cs-quota-refresh:hover{background:rgba(128,138,158,.16)}.ag-cs-quota-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.ag-cs-quota-card{padding:11px 12px;border-radius:var(--ag-cs-r-md,10px);gap:8px}.ag-cs-quota-name{font-size:12px}.ag-cs-quota-pace{padding:1.5px 6.5px;font-size:10px;border:1px solid rgba(148,163,184,.24);color:var(--_m)}.ag-cs-quota-pace[data-pace="ok"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 30%,transparent);background:color-mix(in srgb,currentColor 10%,transparent)}.ag-cs-quota-pace[data-pace="tight"]{color:#d97706;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12)}.dark .ag-cs-quota-pace[data-pace="tight"]{color:#fbbf24}.ag-cs-quota-pace[data-pace="low"]{color:#dc2626;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.12)}.dark .ag-cs-quota-pace[data-pace="low"]{color:#f87171}.ag-cs-quota-win{gap:4px}.ag-cs-quota-win-row{align-items:baseline}.ag-cs-quota-win-lbl{color:var(--_m);font-size:10.5px}.ag-cs-quota-bar{position:relative;height:6px;background:rgba(148,163,184,.18);overflow:hidden}.ag-cs-qbar-solid{position:absolute;inset:0 auto 0 0;color:var(--_a);background:linear-gradient(90deg,currentColor,color-mix(in srgb,currentColor 68%,#fff))}.ag-cs-quota-win[data-warn="1"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#d97706,#fbbf24)}.ag-cs-quota-win[data-warn="2"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#dc2626,#f87171)}';
+  const STUDIO_EXTRA_CSS = STUDIO_HEAD_CSS + '.agy-home{--_a:var(--ag-cs-accent,var(--primary,#2563eb));--_m:var(--muted-foreground);--_b:var(--ag-cs-border-1,rgba(148,163,184,.2));--_p:var(--ag-cs-pill-bg,rgba(128,138,158,.08))}.ag-cs-home-tab,.ag-cs-home-range{white-space:nowrap}.ag-cs-home-head-left,.ag-cs-home-head-right{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.ag-cs-home-head-left{min-width:0}.ag-cs-home-scope-badge,.ag-cs-home-stat-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-cs-home-scope-badge,.ag-cs-quota-pace,.ag-cs-quota-bar,.ag-cs-qbar-solid{border-radius:999px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-card{border:1px solid var(--_b);background:var(--_p)}.ag-cs-home-ws-select,.ag-cs-quota-refresh{border-radius:var(--ag-cs-r-sm,6px);cursor:pointer}.ag-cs-home-ws-select,.ag-cs-quota-toolbar,.ag-cs-quota-refresh,.ag-cs-quota-win-row,.ag-cs-quota-win-val{font-size:11px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-name,.ag-cs-quota-win-val{color:var(--foreground)}.ag-cs-home-scope-badge,.ag-cs-quota-name,.ag-cs-quota-pace,.ag-cs-quota-win-val{font-weight:600}.ag-cs-quota-wrap,.ag-cs-quota-card,.ag-cs-quota-win{display:flex;flex-direction:column}.ag-cs-home-stat-sub,.ag-cs-quota-card,.ag-cs-quota-win-val{font-variant-numeric:tabular-nums}.ag-cs-home-stat-sub,.ag-cs-quota-foot{font-size:10px;color:var(--_m);opacity:.82}.ag-cs-home-scope-badge{display:inline-flex;align-items:center;height:20px;max-width:168px;padding:0 7px;font-size:10.5px;color:var(--_a);border:1px solid color-mix(in srgb,currentColor 32%,transparent);background:color-mix(in srgb,currentColor 11%,transparent)}.ag-cs-home-ws-select{height:24px;max-width:156px;padding:0 20px 0 8px;color-scheme:inherit;font-weight:500;outline:none;text-overflow:ellipsis}.ag-cs-home-ws-select option{background:var(--card,#141418);color:var(--foreground,#F2F2F5);}.ag-cs-home-stat-sub{display:block;margin-top:2px;line-height:1.25}.ag-cs-hs-tg{display:inline-flex;align-items:center;gap:3px;max-width:100%;background:0 0;border:0;padding:0;cursor:pointer;font:inherit}.ag-cs-hs-tg:hover{color:var(--foreground);opacity:1}.ag-cs-hs-tg svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;flex:none}.ag-cs-quota-wrap{gap:10px;margin-top:4px;position:relative;z-index:1}.ag-cs-quota-toolbar,.ag-cs-quota-card-head,.ag-cs-quota-win-row{display:flex;align-items:center;justify-content:space-between;gap:6px}.ag-cs-quota-toolbar{color:var(--_m)}.ag-cs-quota-refresh{height:23px;padding:0 9px}.ag-cs-quota-refresh:hover{background:rgba(128,138,158,.16)}.ag-cs-quota-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.ag-cs-quota-card{padding:11px 12px;border-radius:var(--ag-cs-r-md,10px);gap:8px}.ag-cs-quota-name{font-size:12px}.ag-cs-quota-pace{padding:1.5px 6.5px;font-size:10px;border:1px solid rgba(148,163,184,.24);color:var(--_m)}.ag-cs-quota-pace[data-pace="ok"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 30%,transparent);background:color-mix(in srgb,currentColor 10%,transparent)}.ag-cs-quota-pace[data-pace="tight"]{color:#d97706;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12)}.dark .ag-cs-quota-pace[data-pace="tight"]{color:#fbbf24}.ag-cs-quota-pace[data-pace="low"]{color:#dc2626;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.12)}.dark .ag-cs-quota-pace[data-pace="low"]{color:#f87171}.ag-cs-quota-win{gap:4px}.ag-cs-quota-win-row{align-items:baseline}.ag-cs-quota-win-lbl{color:var(--_m);font-size:10.5px}.ag-cs-quota-bar{position:relative;height:6px;background:rgba(148,163,184,.18);overflow:hidden}.ag-cs-qbar-solid{position:absolute;inset:0 auto 0 0;color:var(--_a);background:linear-gradient(90deg,currentColor,color-mix(in srgb,currentColor 68%,#fff))}.ag-cs-quota-win[data-warn="1"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#d97706,#fbbf24)}.ag-cs-quota-win[data-warn="2"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#dc2626,#f87171)}';
 
   const REMOTE_TITLE_RE = /\[(SSH|WSL|Dev Container|Codespaces|Tunnel|Remote):\s*([^\]]+)\]/i;
   const decUri = (v) => { const s = String(v || '').trim(); if (!s) return ''; try { return decodeURIComponent(s); } catch { return s; } };
@@ -393,12 +393,11 @@
               const cur = sumsMap.get(sid);
               const im = extractMeta(item);
               const cm = extractMeta(cur);
-              const needWs = !!(item.workspace && !cur.workspace && !cur.workspaces);
-              const needU = !!(im.u.length && !cur.workspaces);
-              const needPid = !!(im.parentId && !cm.parentId);
-              if (needWs || needU || needPid) {
-                sumsMap.set(sid, { ...cur, ...(needWs ? { workspace: item.workspace } : {}), ...(needU ? { workspaces: im.u } : {}), ...(needPid ? { parentId: im.parentId } : {}) });
-              }
+              const p = {};
+              if (item.workspace && !cur.workspace && !cur.workspaces) p.workspace = item.workspace;
+              if (im.u.length && !cur.workspaces) p.workspaces = im.u;
+              if (im.parentId && !cm.parentId) p.parentId = im.parentId;
+              if (p.workspace || p.workspaces || p.parentId) sumsMap.set(sid, { ...cur, ...p });
             }
           }
         } catch {}
@@ -409,8 +408,8 @@
       for (const hit of Array.isArray(bridgeRecs) ? bridgeRecs : []) {
         if (!hit?.id || !hit.record?.days) continue;
         const cur = usageRecords.get(hit.id);
-        const cr = Boolean(hit.archived) === Boolean(hit.record.archived) ? hit.record : { ...hit.record, archived: !!hit.archived };
-        if (!cur || Boolean(cur.archived) !== Boolean(cr.archived) || ((cur._do || !hasRealUsage(cur)) && hasRealUsage(cr))) { usageRecords.set(hit.id, cr); seededCache = true; }
+        const cr = !!hit.archived === !!hit.record.archived ? hit.record : { ...hit.record, archived: !!hit.archived };
+        if (!cur || !!cur.archived !== !!cr.archived || ((cur._do || !hasRealUsage(cur)) && hasRealUsage(cr))) { usageRecords.set(hit.id, cr); seededCache = true; }
       }
 
       if (curScope === 'local' && Array.isArray(liveQuotaSnap?.conversations)) {
@@ -759,16 +758,16 @@
           const L = (c, t, e, j) => (lang === 'en' ? e : lang === 'ja' ? j : lang === 'zh-CN' ? c : t);
           const ac = fmtCnt(toNum(data.activeSessions));
           const ar = fmtCnt(arch);
-          const sesLabel = !incArch
-            ? L('当前会话数', '現存會話', 'Active sessions', '現存セッション')
-            : arch > 0 ? L('累计会话数', '累計會話', 'Total sessions', '累計セッション') : ui.kpiSessions || 'Sessions';
-          const sesSub = !incArch
-            ? `${arch > 0 ? L('已隐藏归档 ', '已隱藏歸檔 ', 'Archived hidden: ', '履歴非表示 ') + ar : L('仅当前', '僅現存', 'Active only', '現存のみ')} ⇄`
-            : arch > 0 ? `${L('当前', '現存', 'Active', '現存')} ${ac} · ${L('归档', '歸檔', 'Archived', '履歴')} ${ar} ⇄` : '';
-          const sesTip = `${data.sessions}${subSes > 0 ? ` + ${subSes}` : ''} (${ac}/${ar})`;
+          const kA = L('当前', '現存', 'Active', '現存');
+          const kH = L('归档', '歸檔', 'Archived', '履歴');
+          const bS = ui.kpiSessions || 'Sessions';
+          const sL = !incArch ? `${kA}${lang === 'en' ? ' ' : ''}${bS}` : arch > 0 ? `${L('累计', '累計', 'Total ', '累計')}${bS}` : bS;
+          const sS = !incArch ? (arch > 0 ? `${L('已隐藏', '已隱藏', 'Hidden ', '非表示 ')}${kH} ${ar}` : kA) : arch > 0 ? `${kA} ${ac} · ${kH} ${ar}` : '';
+          const sT = `${data.sessions}${subSes > 0 ? ` + ${subSes}` : ''} (${ac}/${ar})`;
 
+          const d = getDoc();
           for (const [k, lb, vt, tt, stx, fn] of [
-            ['sessions', sesLabel, fmtCnt(data.sessions), sesTip, sesSub, sesSub ? () => { incArch = !incArch; try { getLs()?.setItem(SPK, incArch ? 'all' : 'active'); } catch {} cachedAggKey = ''; renderHomePanel(true); } : null],
+            ['sessions', sL, fmtCnt(data.sessions), sT, sS, sS ? () => { incArch = !incArch; try { getLs()?.setItem(SPK, incArch ? 'all' : 'active'); } catch {} cachedAggKey = ''; renderHomePanel(true); } : null],
             ['calls', ui.kpiCalls || 'Messages', fmtCnt(data.calls), String(data.calls)],
             ['tokens', ui.kpiTokens || 'Total tokens', fmtTok(data.tokens), `${fmtCnt(data.tokens)} tokens${swarmSub ? ` (${swarmSub})` : ''}`, swarmSub],
             ['days', ui.kpiDays || 'Active days', fmtCnt(data.activeDays), String(data.activeDays)],
@@ -780,7 +779,13 @@
             if (!skeleton) val.title = tt;
             let sEl = null;
             if (!skeleton && stx) {
-              sEl = fn ? bt('ag-cs-home-stat-sub ag-cs-hs-tg', stx, fn) : sp('ag-cs-home-stat-sub', stx);
+              if (fn) {
+                const n = 'http://www.w3.org/2000/svg';
+                const sv = d?.createElementNS?.(n, 'svg');
+                const pt = sv && d.createElementNS(n, 'path');
+                if (pt) { sv.setAttribute('viewBox', '0 0 12 12'); pt.setAttribute('d', 'M2 4h8M8 2l2 2-2 2M10 8H2M4 6 2 8l2 2'); ap(sv, pt); }
+                sEl = ap(bt('ag-cs-home-stat-sub ag-cs-hs-tg', stx, fn), sv);
+              } else sEl = sp('ag-cs-home-stat-sub', stx);
               sEl.title = tt;
             }
             ap(stats, ap(cell, sp('ag-cs-home-stat-label', lb), val, sEl));
@@ -789,7 +794,6 @@
 
           const heat = dv('ag-cs-home-heat', skeleton ? { 'data-skeleton': '' } : null);
           const fmt = usageCore.homeShortDateFormat(lang);
-          const d = getDoc();
           const heatFrag = isFn(d?.createDocumentFragment) ? d.createDocumentFragment() : heat;
           for (const c of data.grid.cells) {
             const lv = String(c.level);
