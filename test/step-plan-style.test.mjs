@@ -29,12 +29,18 @@ test('step-plan checklist card and all item states share Obsidian Prism jewel st
   assert.ok(baseSection.includes('&[data-status="failed"]{'), 'must style failed state');
   assert.ok(baseSection.includes('&[data-status="skipped"]{'), 'must style skipped state');
 
+  // State transition keyframes & motion-off guard
+  assert.ok(baseSection.includes('@keyframes ag-sp-pop{'), 'must define ag-sp-pop badge transition keyframe');
+  assert.ok(baseSection.includes('@keyframes ag-sp-chk{'), 'must define ag-sp-chk checkmark reveal keyframe');
+  assert.ok(baseSection.includes('@keyframes ag-sp-bar{'), 'must define ag-sp-bar pause-bars reveal keyframe');
+  assert.ok(baseSection.includes('[data-testid="step-plan-item"] :is(span,svg,path)'), 'motion="off" must disable step-plan state animations');
+
   // Light theme overrides
   assert.ok(lightSection.includes('& [data-testid="step-plan"]{'), 'light theme must override step-plan card surface');
   assert.ok(lightSection.includes('& [data-testid="step-plan-item"]{'), 'light theme must override step-plan-item badges');
-  assert.ok(lightSection.includes('&[data-status="done"]>span:first-child{'), 'light theme must tune done badge contrast');
+  assert.ok(lightSection.includes('&[data-status="done"]{--_sc:var(--success,#059669);'), 'light theme must tune done badge contrast');
   assert.ok(lightSection.includes('&[data-status="pending"]>span:first-child{'), 'light theme must tune pending badge contrast');
-  assert.ok(lightSection.includes('&[data-status="failed"]>span:first-child{'), 'light theme must tune failed badge contrast');
+  assert.ok(lightSection.includes('&[data-status="failed"]{--_sc:var(--error,#DC2626);'), 'light theme must tune failed badge contrast');
 
   // CSS hygiene & budget checks
   assert.equal(/:has\(/.test(css), false, 'style.css must have 0 :has() selectors');
