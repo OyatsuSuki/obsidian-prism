@@ -3454,6 +3454,41 @@ test('Deleted conversations preserve historical token usage across daemon list-s
     assert.ok(slowSaved[deletedId], 'Seeded archived record must be persisted even before slow fetchBatch completes');
     if (resolveSlowBatch) resolveSlowBatch();
     await slowProm;
+
+    // 5) Frozen Redux/Immer summary objects must NEVER throw TypeError when merging listSummaries metadata (which previously aborted before assigning bridgeRecs!)
+    const frozenKey = 'test:deleted:rollup:frozen';
+    storeMem.delete(frozenKey);
+    const frozenSummaries = Object.freeze({
+      [liveId]: Object.freeze({ stepCount: 4, lastModifiedTime: Object.freeze({ seconds: nowSec }) }),
+    });
+    globalThis.window.__agPrismUsageBridge.listSummaries = async () => ({
+      ok: true,
+      scopeKey: 'local',
+      summaries: [{ id: liveId, stepCount: 4, lastModifiedSec: nowSec, workspace: 'busy-bohr', workspaces: ['file:///c:/proj/busy-bohr'], parentId: 'root-parent-1' }],
+      records: [
+        { id: liveId, mode: 'full', record: makeDayRec(liveId, 10000, 2, 4) },
+        { id: deletedId, mode: 'full', archived: true, record: makeDayRec(deletedId, 42000, 5, 6) },
+      ],
+    });
+    globalThis.window.__agPrismUsageBridge.fetchBatch = async () => ({ ok: true, records: [] });
+    const ctlFrozen = homeStudioPanel.createHomeStudioPanelController({
+      usageCore,
+      storageUsageCacheKey: frozenKey,
+      isDestroyed: () => false,
+      getHomeLayout: () => 'studio',
+      getLang: () => 'zh-CN',
+      uiText: () => ({}),
+      getDisplayName: () => 'Dev',
+      ensureHooks: () => ({ store: { getState: () => ({ trajectorySummaries: { summaries: frozenSummaries } }) }, svc: {} }),
+      canMountRealCanvas: () => false,
+      setAttrIfChanged: () => {},
+      runGuardedMut: (fn) => fn(),
+    });
+    await ctlFrozen.refreshUsageRollup(true);
+    assert.equal(ctlFrozen.getUsageRecordsCount(), 2, 'Frozen Redux summary objects must not throw or drop bridgeRecs');
+    ctlFrozen.flushUsageCacheNow();
+    const frozenSaved = JSON.parse(storeMem.get(frozenKey) || '{}');
+    assert.ok(frozenSaved[deletedId], 'Archived deleted conversation must hydrate even when Redux summaries are Object.freeze()d');
   } finally {
     globalThis.window = prevWin;
     globalThis.document = prevDoc;

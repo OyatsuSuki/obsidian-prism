@@ -379,6 +379,7 @@
         try {
           const sumRes = await usageBridge.listSummaries(8000);
           if (typeof sumRes?.scopeKey === 'string' && sumRes.scopeKey) bridgeScopeKey = normalizeScopeKey(sumRes.scopeKey);
+          bridgeRecs = Array.isArray(sumRes?.records) ? sumRes.records : null;
           const bs = sumRes?.summaries;
           const bList = Array.isArray(bs) ? bs : bs && typeof bs === 'object' ? Object.entries(bs).map(([k, v]) => ({ id: k, ...v })) : [];
           for (const item of bList) {
@@ -389,12 +390,14 @@
               const cur = sumsMap.get(sid);
               const im = extractMeta(item);
               const cm = extractMeta(cur);
-              if (item.workspace && !cur.workspace && !cur.workspaces) cur.workspace = item.workspace;
-              if (im.u.length && !cur.workspaces) cur.workspaces = im.u;
-              if (im.parentId && !cm.parentId) cur.parentId = im.parentId;
+              const needWs = !!(item.workspace && !cur.workspace && !cur.workspaces);
+              const needU = !!(im.u.length && !cur.workspaces);
+              const needPid = !!(im.parentId && !cm.parentId);
+              if (needWs || needU || needPid) {
+                sumsMap.set(sid, { ...cur, ...(needWs ? { workspace: item.workspace } : {}), ...(needU ? { workspaces: im.u } : {}), ...(needPid ? { parentId: im.parentId } : {}) });
+              }
             }
           }
-          bridgeRecs = Array.isArray(sumRes?.records) ? sumRes.records : null;
         } catch {}
       } else if (!liveQuotaSnap) { try { await liveSnapProm; } catch {} }
 
