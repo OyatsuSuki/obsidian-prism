@@ -444,7 +444,8 @@
       if (staleIds.length === 0) { usageHasData = true; if (canPrune) lastUsageFetchAt = now; if (patchedMeta || deletedAny) saveUsageCache(); renderHomePanel(); return; }
 
       usageLoading = true;
-      if (!usageHasData) renderHomePanel();
+      if (seededCache) saveUsageCache();
+      if (!usageHasData || seededCache) renderHomePanel();
       const applyRecord = (id, sum, prev, rec, m) => {
         if (hasRealUsage(prev) && !hasRealUsage(rec)) usageRecords.set(id, advanceCachedCursor(prev, id, sum, true));
         else { const n = { ...rec, subagent: !!(rec.subagent || m.subagent), workspace: rec.workspace || m.workspace || '', parentId: rec.parentId || m.parentId || '' }; delete n._do; usageRecords.set(id, n); }

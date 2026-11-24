@@ -3424,6 +3424,36 @@ test('Deleted conversations preserve historical token usage across daemon list-s
     });
     await ctlEmpty.refreshUsageRollup(true);
     assert.equal(ctlEmpty.getUsageRecordsCount(), 2, 'Archived historical usage must still hydrate when 0 live conversations exist');
+
+    // 4) When listSummaries seeds archived records AND fetchBatch is slow/in-flight, seeded archived usage must flush to cache immediately before fetchBatch finishes
+    let resolveSlowBatch = null;
+    const slowKey = 'test:deleted:rollup:slow';
+    storeMem.set(slowKey, JSON.stringify({ [liveId]: makeDayRec(liveId, 10000, 2, 4) }));
+    activeSummaries = {
+      [liveId]: { stepCount: 5, lastModifiedTime: { seconds: nowSec + 10 }, workspaces: [{ workspaceFolderAbsoluteUri: 'file:///c:/proj/busy-bohr' }] },
+    };
+    globalThis.window.__agPrismUsageBridge.fetchBatch = () => new Promise((r) => { resolveSlowBatch = () => r({ ok: true, records: [] }); });
+    const ctlSlow = homeStudioPanel.createHomeStudioPanelController({
+      usageCore,
+      storageUsageCacheKey: slowKey,
+      isDestroyed: () => false,
+      getHomeLayout: () => 'studio',
+      getLang: () => 'zh-CN',
+      uiText: () => ({}),
+      getDisplayName: () => 'Dev',
+      ensureHooks: () => ({ store: { getState: () => ({ trajectorySummaries: { summaries: activeSummaries } }) }, svc: {} }),
+      canMountRealCanvas: () => false,
+      setAttrIfChanged: () => {},
+      runGuardedMut: (fn) => fn(),
+    });
+    const slowProm = ctlSlow.refreshUsageRollup(true);
+    await new Promise((r) => setTimeout(r, 20));
+    assert.equal(ctlSlow.getUsageRecordsCount(), 2, 'Seeded archived record must be available in memory while fetchBatch is still in-flight');
+    ctlSlow.flushUsageCacheNow();
+    const slowSaved = JSON.parse(storeMem.get(slowKey) || '{}');
+    assert.ok(slowSaved[deletedId], 'Seeded archived record must be persisted even before slow fetchBatch completes');
+    if (resolveSlowBatch) resolveSlowBatch();
+    await slowProm;
   } finally {
     globalThis.window = prevWin;
     globalThis.document = prevDoc;
