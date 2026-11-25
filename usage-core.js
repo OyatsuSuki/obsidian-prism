@@ -41,72 +41,76 @@
 
   // Book yardsticks matched by token count (measured via o200k_base in dsh-claude-style).
   const HOME_BOOKS = [
-    { key: 'tao', tokens: 7607, zh: '《道德经》', zhTW: '《道德經》', ja: '『老子（道徳経）』', en: 'Tao Te Ching' },
-    { key: 'yellow', tokens: 7778, zh: '《黄色壁纸》', zhTW: '《黃色壁紙》', ja: '『黄色い壁紙』', en: 'The Yellow Wallpaper' },
-    { key: 'meta', tokens: 27557, zh: '《变形记》', zhTW: '《變形記》', ja: '『変身』', en: 'Metamorphosis' },
-    { key: 'jekyll', tokens: 34713, zh: '《化身博士》', zhTW: '《化身博士》', ja: '『ジーキル博士とハイド氏』', en: 'The Strange Case of Dr Jekyll and Mr Hyde' },
-    { key: 'alice', tokens: 37248, zh: '《爱丽丝漫游奇境》', zhTW: '《愛麗絲夢遊仙境》', ja: '『不思議の国のアリス』', en: "Alice's Adventures in Wonderland" },
-    { key: 'animal', tokens: 39000, zh: '《动物农场》', zhTW: '《動物農莊》', ja: '『動物農場』', en: 'Animal Farm' },
-    { key: 'carol', tokens: 40306, zh: '《圣诞颂歌》', zhTW: '《小氣財神》', yue: '《聖誕頌歌》', ja: '『クリスマス・キャロル』', en: 'A Christmas Carol' },
-    { key: 'wild', tokens: 42383, zh: '《野性的呼唤》', zhTW: '《野性的呼喚》', ja: '『野生の呼び声』', en: 'The Call of the Wild' },
-    { key: 'time', tokens: 42817, zh: '《时间机器》', zhTW: '《時間機器》', ja: '『タイム・マシン』', en: 'The Time Machine' },
-    { key: 'oz', tokens: 51004, zh: '《绿野仙踪》', zhTW: '《綠野仙蹤》', ja: '『オズの魔法使い』', en: 'The Wonderful Wizard of Oz' },
-    { key: 'darkness', tokens: 52163, zh: '《黑暗之心》', zhTW: '《黑暗之心》', ja: '『闇の奥』', en: 'Heart of Darkness' },
-    { key: 'faust', tokens: 53930, zh: '《浮士德》', zhTW: '《浮士德》', ja: '『ファウスト』', en: 'Faust' },
-    { key: 'screw', tokens: 57484, zh: '《螺丝在拧紧》', zhTW: '《碧廬冤孽》', ja: '『ねじの回転』', en: 'The Turn of the Screw' },
-    { key: 'aesop', tokens: 60707, zh: '《伊索寓言》', zhTW: '《伊索寓言》', ja: '『イソップ寓話』', en: "Aesop's Fables" },
-    { key: 'peter', tokens: 63821, zh: '《彼得·潘》', zhTW: '《小飛俠彼得潘》', ja: '『ピーター・パン』', en: 'Peter Pan' },
-    { key: 'gatsby', tokens: 65763, zh: '《了不起的盖茨比》', zhTW: '《大亨小傳》', ja: '『グレート・ギャツビー』', en: 'The Great Gatsby' },
-    { key: 'prince', tokens: 66670, zh: '《君主论》', zhTW: '《君王論》', ja: '『君主論』', en: 'The Prince' },
-    { key: 'invisible', tokens: 68163, zh: '《隐形人》', zhTW: '《隱形人》', ja: '『透明人間』', en: 'The Invisible Man' },
-    { key: 'andersen', tokens: 73931, zh: '《安徒生童话》', zhTW: '《安徒生童話》', ja: '『アンデルセン童話集』', en: "Andersen's Fairy Tales" },
-    { key: 'worlds', tokens: 80168, zh: '《世界大战》', zhTW: '《世界大戰》', ja: '『宇宙戦争』', en: 'The War of the Worlds' },
-    { key: 'beyond', tokens: 89836, zh: '《善恶的彼岸》', zhTW: '《善惡的彼岸》', ja: '『善悪の彼岸』', en: 'Beyond Good and Evil' },
-    { key: 'whitefang', tokens: 96418, zh: '《白牙》', zhTW: '《白牙》', ja: '『白い牙』', en: 'White Fang' },
-    { key: 'meditations', tokens: 96973, zh: '《沉思录》', zhTW: '《沉思錄》', ja: '『自省録』', en: 'Meditations' },
-    { key: 'frankenstein', tokens: 97886, zh: '《弗兰肯斯坦》', zhTW: '《科學怪人》', ja: '『フランケンシュタイン』', en: 'Frankenstein' },
-    { key: 'stone', tokens: 100000, zh: '《哈利·波特与魔法石》', zhTW: '《哈利波特：神秘的魔法石》', ja: '『ハリー・ポッターと賢者の石』', en: "Harry Potter and the Philosopher's Stone" },
-    { key: 'dorian', tokens: 106339, zh: '《道林·格雷的画像》', zhTW: '《格雷的畫像》', ja: '『ドリアン・グレイの肖像』', en: 'The Picture of Dorian Gray' },
-    { key: 'tolive', tokens: 115000, zh: '《活着》', zhTW: '《活著》', ja: '『生きる』', en: 'To Live' },
-    { key: 'hobbit', tokens: 123000, zh: '《霍比特人》', zhTW: '《哈比人歷險記》', yue: '《哈比人》', ja: '『ホビットの冒険』', en: 'The Hobbit' },
-    { key: 'grimm', tokens: 132467, zh: '《格林童话》', zhTW: '《格林童話》', ja: '『グリム童話集』', en: "Grimms' Fairy Tales" },
-    { key: '1984', tokens: 136278, zh: '《一九八四》', zhTW: '《一九八四》', ja: '『1984年』', en: 'Nineteen Eighty-Four' },
-    { key: 'sherlock', tokens: 138725, zh: '《福尔摩斯冒险史》', zhTW: '《福爾摩斯冒險史》', ja: '『シャーロック・ホームズの冒険』', en: 'The Adventures of Sherlock Holmes' },
-    { key: 'gulliver', tokens: 138958, zh: '《格列佛游记》', zhTW: '《格列佛遊記》', ja: '『ガリヴァー旅行記』', en: "Gulliver's Travels" },
-    { key: 'walden', tokens: 152659, zh: '《瓦尔登湖》', zhTW: '《湖濱散記》', ja: '『ウォールデン 森の生活』', en: 'Walden' },
-    { key: 'crusoe', tokens: 153596, zh: '《鲁滨逊漂流记》', zhTW: '《魯賓遜漂流記》', ja: '『ロビンソン・クルーソー』', en: 'Robinson Crusoe' },
-    { key: 'huck', tokens: 154263, zh: '《哈克贝利·费恩历险记》', zhTW: '《頑童歷險記》', ja: '『ハックルベリー・フィンの冒険』', en: 'Adventures of Huckleberry Finn' },
-    { key: 'divine', tokens: 157765, zh: '《神曲》', zhTW: '《神曲》', ja: '『神曲』', en: 'The Divine Comedy' },
-    { key: 'bovary', tokens: 159575, zh: '《包法利夫人》', zhTW: '《包法利夫人》', ja: '『ボヴァリー夫人』', en: 'Madame Bovary' },
-    { key: 'zarathustra', tokens: 161488, zh: '《查拉图斯特拉如是说》', zhTW: '《查拉圖斯特拉如是說》', ja: '『ツァラトゥストラはこう語った』', en: 'Thus Spoke Zarathustra' },
-    { key: 'pride', tokens: 171701, zh: '《傲慢与偏见》', zhTW: '《傲慢與偏見》', ja: '『高慢と偏見』', en: 'Pride and Prejudice' },
-    { key: 'odyssey', tokens: 173150, zh: '《奥德赛》', zhTW: '《奧德賽》', ja: '『オデュッセイア』', en: 'The Odyssey' },
-    { key: 'twocities', tokens: 187333, zh: '《双城记》', zhTW: '《雙城記》', ja: '『二都物語』', en: 'A Tale of Two Cities' },
-    { key: 'threebody', tokens: 202000, zh: '《三体》', zhTW: '《三體》', ja: '『三体』', en: 'The Three-Body Problem' },
-    { key: 'dracula', tokens: 213648, zh: '《德古拉》', zhTW: '《德古拉》', ja: '『ドラキュラ』', en: 'Dracula' },
-    { key: 'expectations', tokens: 252176, zh: '《远大前程》', zhTW: '《孤星血淚》', ja: '『大いなる遺産』', en: 'Great Expectations' },
-    { key: 'janeeyre', tokens: 256179, zh: '《简·爱》', zhTW: '《簡·愛》', ja: '『ジェイン・エア』', en: 'Jane Eyre' },
-    { key: 'republic', tokens: 279539, zh: '《理想国》', zhTW: '《理想國》', ja: '『国家』', en: 'The Republic' },
-    { key: 'crime', tokens: 285009, zh: '《罪与罚》', zhTW: '《罪與罰》', ja: '『罪と罰』', en: 'Crime and Punishment' },
-    { key: 'leviathan', tokens: 304696, zh: '《利维坦》', zhTW: '《利維坦》', ja: '『リヴァイアサン』', en: 'Leviathan' },
-    { key: 'moby', tokens: 306522, zh: '《白鲸》', zhTW: '《白鯨記》', ja: '『白鯨』', en: 'Moby-Dick' },
-    { key: 'darkforest', tokens: 307000, zh: '《三体Ⅱ·黑暗森林》', zhTW: '《三體Ⅱ·黑暗森林》', ja: '『三体II 黒暗森林』', en: 'The Dark Forest' },
-    { key: 'deathsend', tokens: 336000, zh: '《三体Ⅲ·死神永生》', zhTW: '《三體Ⅲ·死神永生》', ja: '『三体III 死神永生』', en: "Death's End" },
-    { key: 'anna', tokens: 481659, zh: '《安娜·卡列尼娜》', zhTW: '《安娜·卡列尼娜》', ja: '『アンナ・カレーニナ』', en: 'Anna Karenina' },
-    { key: 'karamazov', tokens: 487590, zh: '《卡拉马佐夫兄弟》', zhTW: '《卡拉馬佐夫兄弟》', ja: '『カラマーゾフの兄弟』', en: 'The Brothers Karamazov' },
-    { key: 'quixote', tokens: 574243, zh: '《堂吉诃德》', zhTW: '《唐吉訶德》', ja: '『ドン・キホーテ』', en: 'Don Quixote' },
-    { key: 'lotr', tokens: 625000, zh: '《魔戒》', zhTW: '《魔戒》', ja: '『指輪物語』', en: 'The Lord of the Rings' },
-    { key: 'kingdoms', tokens: 638009, zh: '《三国演义》', zhTW: '《三國演義》', ja: '『三国志演義』', en: 'Romance of the Three Kingdoms' },
-    { key: 'montecristo', tokens: 651128, zh: '《基督山伯爵》', zhTW: '《基督山恩仇記》', ja: '『モンテ・クリスト伯』', en: 'The Count of Monte Cristo' },
-    { key: 'warpeace', tokens: 769001, zh: '《战争与和平》', zhTW: '《戰爭與和平》', ja: '『戦争と平和』', en: 'War and Peace' },
-    { key: 'journeywest', tokens: 783200, zh: '《西游记》', zhTW: '《西遊記》', ja: '『西遊記』', en: 'Journey to the West' },
-    { key: 'miserables', tokens: 801791, zh: '《悲惨世界》', zhTW: '《悲慘世界》', yue: '《孤星淚》', ja: '『レ・ミゼラブル』', en: 'Les Misérables' },
-    { key: 'redchamber', tokens: 903956, zh: '《红楼梦》', zhTW: '《紅樓夢》', ja: '『紅楼夢』', en: 'Dream of the Red Chamber' },
-    { key: 'watermargin', tokens: 958242, zh: '《水浒传》', zhTW: '《水滸傳》', ja: '『水滸伝』', en: 'Water Margin' },
-    { key: 'ordinary', tokens: 998000, zh: '《平凡的世界》', zhTW: '《平凡的世界》', ja: '『平凡な世界』', en: 'Ordinary World' },
-    { key: 'harrypotter', tokens: 1409000, zh: '《哈利·波特》全集', zhTW: '《哈利波特》全集', ja: '『ハリー・ポッター』全巻', en: 'the whole Harry Potter series' },
-    { key: 'losttime', tokens: 1647000, zh: '《追忆似水年华》', zhTW: '《追憶似水年華》', ja: '『失われた時を求めて』', en: 'In Search of Lost Time' },
-  ];
+    ['tao', 7607, '道德经', '道德經', '老子（道徳経）', 'Tao Te Ching'],
+    ['yellow', 7778, '黄色壁纸', '黃色壁紙', '黄色い壁紙', 'The Yellow Wallpaper'],
+    ['meta', 27557, '变形记', '變形記', '変身', 'Metamorphosis'],
+    ['jekyll', 34713, '化身博士', '', 'ジーキル博士とハイド氏', 'The Strange Case of Dr Jekyll and Mr Hyde'],
+    ['alice', 37248, '爱丽丝漫游奇境', '愛麗絲夢遊仙境', '不思議の国のアリス', "Alice's Adventures in Wonderland"],
+    ['animal', 39000, '动物农场', '動物農莊', '動物農場', 'Animal Farm'],
+    ['carol', 40306, '圣诞颂歌', '小氣財神', 'クリスマス・キャロル', 'A Christmas Carol', '聖誕頌歌'],
+    ['wild', 42383, '野性的呼唤', '野性的呼喚', '野生の呼び声', 'The Call of the Wild'],
+    ['time', 42817, '时间机器', '時間機器', 'タイム・マシン', 'The Time Machine'],
+    ['oz', 51004, '绿野仙踪', '綠野仙蹤', 'オズの魔法使い', 'The Wonderful Wizard of Oz'],
+    ['darkness', 52163, '黑暗之心', '', '闇の奥', 'Heart of Darkness'],
+    ['faust', 53930, '浮士德', '', 'ファウスト', 'Faust'],
+    ['screw', 57484, '螺丝在拧紧', '碧廬冤孽', 'ねじの回転', 'The Turn of the Screw'],
+    ['aesop', 60707, '伊索寓言', '', 'イソップ寓話', "Aesop's Fables"],
+    ['peter', 63821, '彼得·潘', '小飛俠彼得潘', 'ピーター・パン', 'Peter Pan'],
+    ['gatsby', 65763, '了不起的盖茨比', '大亨小傳', 'グレート・ギャツビー', 'The Great Gatsby'],
+    ['prince', 66670, '君主论', '君王論', '君主論', 'The Prince'],
+    ['invisible', 68163, '隐形人', '隱形人', '透明人間', 'The Invisible Man'],
+    ['andersen', 73931, '安徒生童话', '安徒生童話', 'アンデルセン童話集', "Andersen's Fairy Tales"],
+    ['worlds', 80168, '世界大战', '世界大戰', '宇宙戦争', 'The War of the Worlds'],
+    ['beyond', 89836, '善恶的彼岸', '善惡的彼岸', '善悪の彼岸', 'Beyond Good and Evil'],
+    ['whitefang', 96418, '白牙', '', '白い牙', 'White Fang'],
+    ['meditations', 96973, '沉思录', '沉思錄', '自省録', 'Meditations'],
+    ['frankenstein', 97886, '弗兰肯斯坦', '科學怪人', 'フランケンシュタイン', 'Frankenstein'],
+    ['stone', 100000, '哈利·波特与魔法石', '哈利波特：神秘的魔法石', 'ハリー・ポッターと賢者の石', "Harry Potter and the Philosopher's Stone"],
+    ['dorian', 106339, '道林·格雷的画像', '格雷的畫像', 'ドリアン・グレイの肖像', 'The Picture of Dorian Gray'],
+    ['tolive', 115000, '活着', '活著', '生きる', 'To Live'],
+    ['hobbit', 123000, '霍比特人', '哈比人歷險記', 'ホビットの冒険', 'The Hobbit', '哈比人'],
+    ['grimm', 132467, '格林童话', '格林童話', 'グリム童話集', "Grimms' Fairy Tales"],
+    ['1984', 136278, '一九八四', '', '1984年', 'Nineteen Eighty-Four'],
+    ['sherlock', 138725, '福尔摩斯冒险史', '福爾摩斯冒險史', 'シャーロック・ホームズの冒険', 'The Adventures of Sherlock Holmes'],
+    ['gulliver', 138958, '格列佛游记', '格列佛遊記', 'ガリヴァー旅行記', "Gulliver's Travels"],
+    ['walden', 152659, '瓦尔登湖', '湖濱散記', 'ウォールデン 森の生活', 'Walden'],
+    ['crusoe', 153596, '鲁滨逊漂流记', '魯賓遜漂流記', 'ロビンソン・クルーソー', 'Robinson Crusoe'],
+    ['huck', 154263, '哈克贝利·费恩历险记', '頑童歷險記', 'ハックルベリー・フィンの冒険', 'Adventures of Huckleberry Finn'],
+    ['divine', 157765, '神曲', '', '神曲', 'The Divine Comedy'],
+    ['bovary', 159575, '包法利夫人', '', 'ボヴァリー夫人', 'Madame Bovary'],
+    ['zarathustra', 161488, '查拉图斯特拉如是说', '查拉圖斯特拉如是說', 'ツァラトゥストラはこう語った', 'Thus Spoke Zarathustra'],
+    ['pride', 171701, '傲慢与偏见', '傲慢與偏見', '高慢と偏見', 'Pride and Prejudice'],
+    ['odyssey', 173150, '奥德赛', '奧德賽', 'オデュッセイア', 'The Odyssey'],
+    ['twocities', 187333, '双城记', '雙城記', '二都物語', 'A Tale of Two Cities'],
+    ['threebody', 202000, '三体', '三體', '三体', 'The Three-Body Problem'],
+    ['dracula', 213648, '德古拉', '', 'ドラキュラ', 'Dracula'],
+    ['expectations', 252176, '远大前程', '孤星血淚', '大いなる遺産', 'Great Expectations'],
+    ['janeeyre', 256179, '简·爱', '簡·愛', 'ジェイン・エア', 'Jane Eyre'],
+    ['republic', 279539, '理想国', '理想國', '国家', 'The Republic'],
+    ['crime', 285009, '罪与罚', '罪與罰', '罪と罰', 'Crime and Punishment'],
+    ['leviathan', 304696, '利维坦', '利維坦', 'リヴァイアサン', 'Leviathan'],
+    ['moby', 306522, '白鲸', '白鯨記', '白鯨', 'Moby-Dick'],
+    ['darkforest', 307000, '三体Ⅱ·黑暗森林', '三體Ⅱ·黑暗森林', '三体II 黒暗森林', 'The Dark Forest'],
+    ['deathsend', 336000, '三体Ⅲ·死神永生', '三體Ⅲ·死神永生', '三体III 死神永生', "Death's End"],
+    ['anna', 481659, '安娜·卡列尼娜', '', 'アンナ・カレーニナ', 'Anna Karenina'],
+    ['karamazov', 487590, '卡拉马佐夫兄弟', '卡拉馬佐夫兄弟', 'カラマーゾフの兄弟', 'The Brothers Karamazov'],
+    ['quixote', 574243, '堂吉诃德', '唐吉訶德', 'ドン・キホーテ', 'Don Quixote'],
+    ['lotr', 625000, '魔戒', '', '指輪物語', 'The Lord of the Rings'],
+    ['kingdoms', 638009, '三国演义', '三國演義', '三国志演義', 'Romance of the Three Kingdoms'],
+    ['montecristo', 651128, '基督山伯爵', '基督山恩仇記', 'モンテ・クリスト伯', 'The Count of Monte Cristo'],
+    ['warpeace', 769001, '战争与和平', '戰爭與和平', '戦争と平和', 'War and Peace'],
+    ['journeywest', 783200, '西游记', '西遊記', '西遊記', 'Journey to the West'],
+    ['miserables', 801791, '悲惨世界', '悲慘世界', 'レ・ミゼラブル', 'Les Misérables', '孤星淚'],
+    ['redchamber', 903956, '红楼梦', '紅樓夢', '紅楼夢', 'Dream of the Red Chamber'],
+    ['watermargin', 958242, '水浒传', '水滸傳', '水滸伝', 'Water Margin'],
+    ['ordinary', 998000, '平凡的世界', '', '平凡な世界', 'Ordinary World'],
+    ['harrypotter', 1409000, '《哈利·波特》全集', '《哈利波特》全集', '『ハリー・ポッター』全巻', 'the whole Harry Potter series'],
+    ['losttime', 1647000, '追忆似水年华', '追憶似水年華', '失われた時を求めて', 'In Search of Lost Time'],
+  ].map(([key, tokens, zh, zhTW, ja, en, yue]) => {
+    const w = (s, l, r) => (s.includes(l) ? s : l + s + r);
+    const z = w(zh, '《', '》');
+    return { key, tokens, zh: z, zhTW: zhTW ? w(zhTW, '《', '》') : z, ...(yue ? { yue: w(yue, '《', '》') } : {}), ja: w(ja, '『', '』'), en };
+  });
 
   function homeBookTitle(book, langOrZh) {
     if (!book) return '';
@@ -485,7 +489,7 @@
       for (let c = rec, h = 0; c && h < 5; h++) {
         const v = fn(c);
         if (v) return v;
-        if (!c.parentId || c.parentId === c.cascadeId) break;
+        if (!c.parentId || String(c.parentId).toLowerCase() === String(c.cascadeId || '').toLowerCase()) break;
         c = byId.get(c.parentId);
       }
       return '';
@@ -497,6 +501,7 @@
     let totalCalls = 0;
     let totalInput = 0;
     let totalCacheRead = 0;
+    let hasArch = false;
     const sessionSet = new Set();
     const actSet = new Set();
     const archSet = new Set();
@@ -513,6 +518,7 @@
       if (!rec || !rec.days) continue;
       const isSub = Boolean(rec.subagent);
       const isArch = Boolean(walkRec(rec, (c) => c.archived));
+      if (!isSub && isArch) hasArch = true;
       const wsId = String(walkRec(rec, (c) => c.workspace) || '');
       const dayKeys = Object.keys(rec.days);
 
@@ -679,6 +685,7 @@
       sessions: sessionSet.size,
       activeSessions: actSet.size,
       archivedSessions: archSet.size,
+      hasArchived: hasArch,
       subagentSessions: subagentSessionSet.size,
       calls: totalCalls,
       tokens: totalTokens,

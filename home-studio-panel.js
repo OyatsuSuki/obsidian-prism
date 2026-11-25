@@ -14,7 +14,7 @@
   }
 
   const STUDIO_HEAD_CSS = '.ag-cs-home-panel-head{flex-wrap:wrap;row-gap:8px}';
-  const STUDIO_EXTRA_CSS = STUDIO_HEAD_CSS + '.agy-home{--_a:var(--ag-cs-accent,var(--primary,#2563eb));--_m:var(--muted-foreground);--_b:var(--ag-cs-border-1,rgba(148,163,184,.2));--_p:var(--ag-cs-pill-bg,rgba(128,138,158,.08))}.ag-cs-home-tab,.ag-cs-home-range{white-space:nowrap}.ag-cs-home-head-left,.ag-cs-home-head-right{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.ag-cs-home-head-left{min-width:0}.ag-cs-home-scope-badge,.ag-cs-home-stat-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-cs-home-scope-badge,.ag-cs-quota-pace,.ag-cs-quota-bar,.ag-cs-qbar-solid{border-radius:999px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-card{border:1px solid var(--_b);background:var(--_p)}.ag-cs-home-ws-select,.ag-cs-quota-refresh{border-radius:var(--ag-cs-r-sm,6px);cursor:pointer}.ag-cs-home-ws-select,.ag-cs-quota-toolbar,.ag-cs-quota-refresh,.ag-cs-quota-win-row,.ag-cs-quota-win-val{font-size:11px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-name,.ag-cs-quota-win-val{color:var(--foreground)}.ag-cs-home-scope-badge,.ag-cs-quota-name,.ag-cs-quota-pace,.ag-cs-quota-win-val{font-weight:600}.ag-cs-quota-wrap,.ag-cs-quota-card,.ag-cs-quota-win{display:flex;flex-direction:column}.ag-cs-home-stat-sub,.ag-cs-quota-card,.ag-cs-quota-win-val{font-variant-numeric:tabular-nums}.ag-cs-home-stat-sub,.ag-cs-quota-foot{font-size:10px;color:var(--_m);opacity:.82}.ag-cs-home-scope-badge{display:inline-flex;align-items:center;height:20px;max-width:168px;padding:0 7px;font-size:10.5px;color:var(--_a);border:1px solid color-mix(in srgb,currentColor 32%,transparent);background:color-mix(in srgb,currentColor 11%,transparent)}.ag-cs-home-ws-select{height:24px;max-width:156px;padding:0 20px 0 8px;color-scheme:inherit;font-weight:500;outline:none;text-overflow:ellipsis}.ag-cs-home-ws-select option{background:var(--card,#141418);color:var(--foreground,#F2F2F5);}.ag-cs-home-stat-sub{display:block;margin-top:2px;line-height:1.25}.ag-cs-hs-tg{display:inline-flex;align-items:center;gap:3px;max-width:100%;background:0 0;border:0;padding:0;cursor:pointer;font:inherit}.ag-cs-hs-tg:hover{color:var(--foreground);opacity:1}.ag-cs-hs-tg svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;flex:none}.ag-cs-quota-wrap{gap:10px;margin-top:4px;position:relative;z-index:1}.ag-cs-quota-toolbar,.ag-cs-quota-card-head,.ag-cs-quota-win-row{display:flex;align-items:center;justify-content:space-between;gap:6px}.ag-cs-quota-toolbar{color:var(--_m)}.ag-cs-quota-refresh{height:23px;padding:0 9px}.ag-cs-quota-refresh:hover{background:rgba(128,138,158,.16)}.ag-cs-quota-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.ag-cs-quota-card{padding:11px 12px;border-radius:var(--ag-cs-r-md,10px);gap:8px}.ag-cs-quota-name{font-size:12px}.ag-cs-quota-pace{padding:1.5px 6.5px;font-size:10px;border:1px solid rgba(148,163,184,.24);color:var(--_m)}.ag-cs-quota-pace[data-pace="ok"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 30%,transparent);background:color-mix(in srgb,currentColor 10%,transparent)}.ag-cs-quota-pace[data-pace="tight"]{color:#d97706;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12)}.dark .ag-cs-quota-pace[data-pace="tight"]{color:#fbbf24}.ag-cs-quota-pace[data-pace="low"]{color:#dc2626;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.12)}.dark .ag-cs-quota-pace[data-pace="low"]{color:#f87171}.ag-cs-quota-win{gap:4px}.ag-cs-quota-win-row{align-items:baseline}.ag-cs-quota-win-lbl{color:var(--_m);font-size:10.5px}.ag-cs-quota-bar{position:relative;height:6px;background:rgba(148,163,184,.18);overflow:hidden}.ag-cs-qbar-solid{position:absolute;inset:0 auto 0 0;color:var(--_a);background:linear-gradient(90deg,currentColor,color-mix(in srgb,currentColor 68%,#fff))}.ag-cs-quota-win[data-warn="1"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#d97706,#fbbf24)}.ag-cs-quota-win[data-warn="2"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#dc2626,#f87171)}';
+  const STUDIO_EXTRA_CSS = STUDIO_HEAD_CSS + '.agy-home{--_a:var(--ag-cs-accent,var(--primary,#2563eb));--_m:var(--muted-foreground);--_b:var(--ag-cs-border-1,rgba(148,163,184,.2));--_p:var(--ag-cs-pill-bg,rgba(128,138,158,.08))}.ag-cs-home-tab,.ag-cs-home-range{white-space:nowrap}.ag-cs-home-head-left,.ag-cs-home-head-right{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.ag-cs-home-head-left{min-width:0}.ag-cs-home-scope-badge,.ag-cs-home-stat-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-cs-home-scope-badge,.ag-cs-quota-pace,.ag-cs-quota-bar,.ag-cs-qbar-solid{border-radius:999px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-card,.ag-cs-hs-tg{border:1px solid var(--_b);background:var(--_p)}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-hs-tg{border-radius:var(--ag-cs-r-sm,6px);cursor:pointer}.ag-cs-home-ws-select,.ag-cs-quota-toolbar,.ag-cs-quota-refresh,.ag-cs-quota-win-row,.ag-cs-quota-win-val,.ag-cs-hs-tg{font-size:11px}.ag-cs-home-ws-select,.ag-cs-quota-refresh,.ag-cs-quota-name,.ag-cs-quota-win-val,.ag-cs-hs-tg{color:var(--foreground)}.ag-cs-home-scope-badge,.ag-cs-quota-name,.ag-cs-quota-pace,.ag-cs-quota-win-val{font-weight:600}.ag-cs-quota-wrap,.ag-cs-quota-card,.ag-cs-quota-win{display:flex;flex-direction:column}.ag-cs-home-stat-sub,.ag-cs-quota-card,.ag-cs-quota-win-val{font-variant-numeric:tabular-nums}.ag-cs-home-stat-sub,.ag-cs-quota-foot{color:var(--_m)}.ag-cs-quota-foot{font-size:10px;opacity:.82}.ag-cs-home-scope-badge,.ag-cs-hs-tg{display:inline-flex;align-items:center}.ag-cs-home-scope-badge,.ag-cs-hs-tg[aria-pressed="true"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 32%,transparent);background:color-mix(in srgb,currentColor 11%,transparent)}.ag-cs-home-scope-badge{height:20px;max-width:168px;padding:0 7px;font-size:10.5px;border:1px solid color-mix(in srgb,currentColor 32%,transparent)}.ag-cs-home-ws-select{height:24px;max-width:156px;padding:0 20px 0 8px;color-scheme:inherit;font-weight:500;text-overflow:ellipsis}.ag-cs-home-ws-select option{background:var(--card,#141418);color:var(--foreground,#F2F2F5);}.ag-cs-home-stat-sub{display:block;margin-top:2px;font-size:10.5px;line-height:1.25}.ag-cs-hs-tg{height:24px;padding:0 8px;gap:4px;font-weight:500;white-space:nowrap}.ag-cs-hs-tg svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}:is(.ag-cs-home-ws-select,.ag-cs-hs-tg,.ag-cs-quota-refresh):focus-visible{outline:2px solid var(--_a);outline-offset:1px}.ag-cs-quota-wrap{gap:10px;margin-top:4px;position:relative;z-index:1}.ag-cs-quota-toolbar,.ag-cs-quota-card-head,.ag-cs-quota-win-row{display:flex;align-items:center;justify-content:space-between;gap:6px}.ag-cs-quota-toolbar{color:var(--_m)}.ag-cs-quota-refresh{height:23px;padding:0 9px}.ag-cs-quota-refresh:hover,.ag-cs-hs-tg:hover{background:rgba(128,138,158,.16)}.ag-cs-quota-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.ag-cs-quota-card{padding:11px 12px;border-radius:var(--ag-cs-r-md,10px);gap:8px}.ag-cs-quota-name{font-size:12px}.ag-cs-quota-pace{padding:1.5px 6.5px;font-size:10px;border:1px solid rgba(148,163,184,.24);color:var(--_m)}.ag-cs-quota-pace[data-pace="ok"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 30%,transparent);background:color-mix(in srgb,currentColor 10%,transparent)}.ag-cs-quota-pace[data-pace="tight"]{color:#d97706;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12)}.dark .ag-cs-quota-pace[data-pace="tight"]{color:#fbbf24}.ag-cs-quota-pace[data-pace="low"]{color:#dc2626;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.12)}.dark .ag-cs-quota-pace[data-pace="low"]{color:#f87171}.ag-cs-quota-win{gap:4px}.ag-cs-quota-win-row{align-items:baseline}.ag-cs-quota-win-lbl{color:var(--_m);font-size:10.5px}.ag-cs-quota-bar{position:relative;height:6px;background:rgba(148,163,184,.18);overflow:hidden}.ag-cs-qbar-solid{position:absolute;inset:0 auto 0 0;color:var(--_a);background:linear-gradient(90deg,currentColor,color-mix(in srgb,currentColor 68%,#fff))}.ag-cs-quota-win[data-warn="1"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#d97706,#fbbf24)}.ag-cs-quota-win[data-warn="2"] .ag-cs-qbar-solid{background:linear-gradient(90deg,#dc2626,#f87171)}';
 
   const REMOTE_TITLE_RE = /\[(SSH|WSL|Dev Container|Codespaces|Tunnel|Remote):\s*([^\]]+)\]/i;
   const decUri = (v) => { const s = String(v || '').trim(); if (!s) return ''; try { return decodeURIComponent(s); } catch { return s; } };
@@ -93,8 +93,8 @@
     let activeTab = 'overview';
     let activeRange = 'all';
     let activeWorkspace = 'all';
-    let incArch = true;
-    const SPK = 'ag-prism:hs.v1';
+    let includeArchived = true;
+    const scopePrefKey = 'ag-prism:homeSessionScope.v1';
     let detectedCurrentWorkspace = '';
     let lastPanelRenderKey = '';
     let cachedAggKey = '';
@@ -162,7 +162,7 @@
     syncScopeAttr(curScope);
 
     const getLs = () => (typeof localStorage !== 'undefined' && localStorage) || null;
-    try { if (getLs()?.getItem(SPK) === 'active') incArch = false; } catch {}
+    try { if (getLs()?.getItem(scopePrefKey) === 'active') includeArchived = false; } catch {}
     const loadScopeCache = (sc) => {
       usageRecords.clear(); usageHasData = false;
       try {
@@ -393,11 +393,11 @@
               const cur = sumsMap.get(sid);
               const im = extractMeta(item);
               const cm = extractMeta(cur);
-              const p = {};
-              if (item.workspace && !cur.workspace && !cur.workspaces) p.workspace = item.workspace;
-              if (im.u.length && !cur.workspaces) p.workspaces = im.u;
-              if (im.parentId && !cm.parentId) p.parentId = im.parentId;
-              if (p.workspace || p.workspaces || p.parentId) sumsMap.set(sid, { ...cur, ...p });
+              const patch = {};
+              if (item.workspace && !cur.workspace && !cur.workspaces) patch.workspace = item.workspace;
+              if (im.u.length && !cur.workspaces) patch.workspaces = im.u;
+              if (im.parentId && !cm.parentId) patch.parentId = im.parentId;
+              if (patch.workspace || patch.workspaces || patch.parentId) sumsMap.set(sid, { ...cur, ...patch });
             }
           }
         } catch {}
@@ -408,7 +408,8 @@
       for (const hit of Array.isArray(bridgeRecs) ? bridgeRecs : []) {
         if (!hit?.id || !hit.record?.days) continue;
         const cur = usageRecords.get(hit.id);
-        const cr = !!hit.archived === !!hit.record.archived ? hit.record : { ...hit.record, archived: !!hit.archived };
+        let cr = hit.record;
+        if (!!hit.archived !== !!cr.archived) { cr = { ...cr }; if (hit.archived) cr.archived = true; else delete cr.archived; }
         if (!cur || !!cur.archived !== !!cr.archived || ((cur._do || !hasRealUsage(cur)) && hasRealUsage(cr))) { usageRecords.set(hit.id, cr); seededCache = true; }
       }
 
@@ -431,7 +432,9 @@
         const cached = usageRecords.get(id);
         if (!cached || (bridgeOnline && cached._do) || toNum(cached.stepCount) !== m.stepCount || toNum(cached.lastModifiedSec) !== m.lastModifiedSec) staleIds.push([id, sum]);
         else if (cached.archived || (m.workspace && !cached.workspace) || (m.parentId && !cached.parentId)) {
-          usageRecords.set(id, { ...cached, archived: false, workspace: cached.workspace || m.workspace || '', parentId: cached.parentId || m.parentId || '' });
+          const nextRec = { ...cached, workspace: cached.workspace || m.workspace || '', parentId: cached.parentId || m.parentId || '' };
+          delete nextRec.archived;
+          usageRecords.set(id, nextRec);
           patchedMeta = true;
         }
       }
@@ -444,7 +447,7 @@
           if (!presentIds.has(oldId)) {
             const oldRec = usageRecords.get(oldId);
             if (oldRec?.subagent && oldRec?.parentId && presentIds.has(oldRec.parentId)) {
-              if (oldRec.archived) { usageRecords.set(oldId, { ...oldRec, archived: false }); patchedMeta = true; }
+              if (oldRec.archived) { const copy = { ...oldRec }; delete copy.archived; usageRecords.set(oldId, copy); patchedMeta = true; }
               continue;
             }
             if (hasTok(oldRec)) {
@@ -686,10 +689,10 @@
       const lang = getLang();
       const ui = uiText(lang);
       const skeleton = !usageHasData;
-      const aggKey = `${usageDataEpoch}|${usageRecords.size}|${activeRange}|${activeWorkspace}|${+incArch}|${lang}|${bookPick}`;
+      const aggKey = `${usageDataEpoch}|${usageRecords.size}|${activeRange}|${activeWorkspace}|${+includeArchived}|${lang}|${bookPick}`;
       let data = cachedAggData;
       if (!data || cachedAggKey !== aggKey) {
-        data = usageCore.aggregateUsageRollup([...usageRecords.values()], activeRange, bookPick, lang, undefined, { workspace: activeWorkspace, includeArchived: incArch });
+        data = usageCore.aggregateUsageRollup([...usageRecords.values()], activeRange, bookPick, lang, undefined, { workspace: activeWorkspace, includeArchived });
         cachedAggKey = aggKey; cachedAggData = data;
       }
       const wsList = Array.isArray(data.workspaces) ? data.workspaces : [];
@@ -698,9 +701,21 @@
         return renderHomePanel(true);
       }
       const isQuotasTab = activeTab === 'quotas';
-      const renderKey = [curScope, lang, activeTab, activeRange, activeWorkspace, +incArch, +modelsExpanded, +skeleton, isQuotasTab ? +quotaLoading : 0, isQuotasTab ? quotaEpoch : 0, usageRecords.size, data.sessions, data.archivedSessions || 0, data.calls, data.tokens, data.subagentTokens || 0, data.cacheHitRate != null ? data.cacheHitRate.toFixed(3) : '-', data.activeDays, data.model || ''].join('|');
+      const arch = toNum(data.archivedSessions);
+      const hasArch = !!(data.hasArchived || arch > 0);
+      const renderKey = [curScope, lang, activeTab, activeRange, activeWorkspace, +includeArchived, +hasArch, +modelsExpanded, +skeleton, isQuotasTab ? +quotaLoading : 0, isQuotasTab ? quotaEpoch : 0, usageRecords.size, data.sessions, arch, data.calls, data.tokens, data.subagentTokens || 0, data.cacheHitRate != null ? data.cacheHitRate.toFixed(3) : '-', data.activeDays, data.model || ''].join('|');
       if (!force && renderKey === lastPanelRenderKey && panel.childElementCount > 0) return;
       lastPanelRenderKey = renderKey;
+
+      const d = getDoc();
+      const lx = lang === 'en' ? 3 : lang === 'ja' ? 4 : lang === 'zh-TW' ? 1 : lang === 'yue' ? 2 : 0;
+      const loc = (s) => s.split('|')[lx];
+      const ae = d?.activeElement;
+      let focusSel = '';
+      if (ae && panel.contains?.(ae)) {
+        if (ae.hasAttribute?.('data-ag-scope-toggle')) focusSel = '[data-ag-scope-toggle]';
+        else for (const a of ['data-tab', 'data-range', 'data-ag-cs-ws-filter']) { const v = ae.getAttribute?.(a); if (v != null) { focusSel = `[${a}="${v}"]`; break; } }
+      }
 
       runGuardedMut(() => {
         panel.innerHTML = '';
@@ -736,6 +751,17 @@
             sel.addEventListener('change', () => { activeWorkspace = sel.value || 'all'; renderHomePanel(); });
             ap(headRight, sel);
           }
+          if (!skeleton && (hasArch || !includeArchived)) {
+            const tLbl = includeArchived ? loc('含归档|含歸檔|含歸檔|All|履歴含む') : loc('仅当前|僅目前|只睇現存|Active|現存のみ');
+            const tTip = lx === 3 ? 'Toggle All / Active only (Overview & Models)' : lx === 4 ? '履歴含む / 現存のみ切替' : lx ? '切換累計含歸檔 / 僅目前' : '切换累计含归档 / 仅当前';
+            const ns = 'http://www.w3.org/2000/svg';
+            const sv = d?.createElementNS?.(ns, 'svg');
+            const pt = sv && d.createElementNS(ns, 'path');
+            if (pt) { sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('aria-hidden', 'true'); sv.setAttribute('focusable', 'false'); pt.setAttribute('d', 'M7 10h14l-4-4m0 8H3l4 4'); ap(sv, pt); }
+            const tg = ap(bt('ag-cs-hs-tg', '', () => { includeArchived = !includeArchived; try { getLs()?.setItem(scopePrefKey, includeArchived ? 'all' : 'active'); } catch {} cachedAggKey = ''; renderHomePanel(true); }, { 'data-ag-scope-toggle': includeArchived ? 'all' : 'active', 'aria-pressed': String(!includeArchived), 'aria-label': tTip }), sv, sp('', tLbl));
+            tg.title = tTip;
+            ap(headRight, tg);
+          }
           const ranges = dv('ag-cs-home-ranges');
           for (const r of usageCore.HOME_RANGES) {
             ap(ranges, bt('ag-cs-home-range', usageCore.homeRangeLabel ? usageCore.homeRangeLabel(r, lang) : r.labelEn, () => { activeRange = r.id; renderHomePanel(); }, activeRange === r.id ? { 'data-range': r.id, 'data-active': '' } : { 'data-range': r.id }));
@@ -746,28 +772,28 @@
 
         if (isQuotasTab) { renderQuotasView(panel, lang, ui); return; }
 
+        const ac = fmtCnt(toNum(data.activeSessions));
+        const ar = fmtCnt(arch);
+        const kA = loc('当前|目前|現存|Active|現存');
+        const kH = loc('归档|歸檔|歸檔|Archived|履歴');
+        const sS = !includeArchived
+          ? (arch > 0 ? (lx === 3 ? `${ar} archived hidden` : lx === 4 ? `履歴 ${ar} 非表示` : `${lx ? '已隱藏歸檔' : '已隐藏归档'} ${ar}`) : loc('仅当前留存|僅目前留存|只睇現存|Active only|現存のみ'))
+          : arch > 0 ? `${kA} ${ac} · ${kH} ${ar}` : '';
+
         if (activeTab === 'overview') {
           const stats = dv('ag-cs-home-stats');
           const cacheVal = isFin(data.cacheHitRate) ? usageCore.fmtPct(data.cacheHitRate * 100, 1) : '—';
           const cacheTitle = typeof data.cacheHitRate === 'number' ? `${ui.cacheRead || 'Cache'}: ${fmtTok(data.cacheReadTokens || 0)} / ${fmtTok(data.totalInput || 0)}${data.peakHour ? ` · ${data.peakHour}` : ''}` : data.peakHour || '—';
           const subTok = toNum(data.subagentTokens);
           const subSes = toNum(data.subagentSessions);
-          const arch = toNum(data.archivedSessions);
           const subPct = data.tokens > 0 && subTok > 0 ? Math.round((subTok / data.tokens) * 100) : 0;
           const swarmSub = subTok > 0 ? (isFn(ui.swarmSplitSub) ? ui.swarmSplitSub(100 - subPct, subPct) : `Main ${100 - subPct}% · Swarm ${subPct}%`) : '';
-          const L = (c, t, e, j) => (lang === 'en' ? e : lang === 'ja' ? j : lang === 'zh-CN' ? c : t);
-          const ac = fmtCnt(toNum(data.activeSessions));
-          const ar = fmtCnt(arch);
-          const kA = L('当前', '現存', 'Active', '現存');
-          const kH = L('归档', '歸檔', 'Archived', '履歴');
           const bS = ui.kpiSessions || 'Sessions';
-          const sL = !incArch ? `${kA}${lang === 'en' ? ' ' : ''}${bS}` : arch > 0 ? `${L('累计', '累計', 'Total ', '累計')}${bS}` : bS;
-          const sS = !incArch ? (arch > 0 ? `${L('已隐藏', '已隱藏', 'Hidden ', '非表示 ')}${kH} ${ar}` : kA) : arch > 0 ? `${kA} ${ac} · ${kH} ${ar}` : '';
-          const sT = `${data.sessions}${subSes > 0 ? ` + ${subSes}` : ''} (${ac}/${ar})`;
+          const sL = !includeArchived ? `${kA}${lx === 3 ? ' ' : ''}${bS}` : arch > 0 ? `${loc('累计|累計|累計|Total |累計')}${bS}` : bS;
+          const sT = `${data.sessions}${subSes > 0 ? ` + ${subSes}` : ''} (${kA} ${ac} · ${kH} ${ar})`;
 
-          const d = getDoc();
-          for (const [k, lb, vt, tt, stx, fn] of [
-            ['sessions', sL, fmtCnt(data.sessions), sT, sS, sS ? () => { incArch = !incArch; try { getLs()?.setItem(SPK, incArch ? 'all' : 'active'); } catch {} cachedAggKey = ''; renderHomePanel(true); } : null],
+          for (const [k, lb, vt, tt, stx] of [
+            ['sessions', sL, fmtCnt(data.sessions), sT, sS],
             ['calls', ui.kpiCalls || 'Messages', fmtCnt(data.calls), String(data.calls)],
             ['tokens', ui.kpiTokens || 'Total tokens', fmtTok(data.tokens), `${fmtCnt(data.tokens)} tokens${swarmSub ? ` (${swarmSub})` : ''}`, swarmSub],
             ['days', ui.kpiDays || 'Active days', fmtCnt(data.activeDays), String(data.activeDays)],
@@ -777,17 +803,8 @@
             const cell = dv('ag-cs-home-stat', skeleton ? { 'data-stat': k, 'data-skeleton': '' } : { 'data-stat': k });
             const val = sp('ag-cs-home-stat-value', skeleton ? '' : vt);
             if (!skeleton) val.title = tt;
-            let sEl = null;
-            if (!skeleton && stx) {
-              if (fn) {
-                const n = 'http://www.w3.org/2000/svg';
-                const sv = d?.createElementNS?.(n, 'svg');
-                const pt = sv && d.createElementNS(n, 'path');
-                if (pt) { sv.setAttribute('viewBox', '0 0 12 12'); pt.setAttribute('d', 'M2 4h8M8 2l2 2-2 2M10 8H2M4 6 2 8l2 2'); ap(sv, pt); }
-                sEl = ap(bt('ag-cs-home-stat-sub ag-cs-hs-tg', stx, fn), sv);
-              } else sEl = sp('ag-cs-home-stat-sub', stx);
-              sEl.title = tt;
-            }
+            const sEl = !skeleton && stx ? sp('ag-cs-home-stat-sub', stx) : null;
+            if (sEl) sEl.title = tt;
             ap(stats, ap(cell, sp('ag-cs-home-stat-label', lb), val, sEl));
           }
           ap(panel, stats);
@@ -808,7 +825,7 @@
           ap(panel, heat, data.funBook ? sp('ag-cs-home-fun', data.funBook) : null);
         } else {
           const models = data.models || [];
-          if (models.length === 0) { ap(panel, dv('ag-cs-home-models-empty', ui.noModelUsage || 'No model usage data yet')); return; }
+          if (models.length === 0) { ap(panel, dv('ag-cs-home-models-empty', !includeArchived && arch > 0 ? sS : (ui.noModelUsage || 'No model usage data yet'))); return; }
           const ids = models.map((m) => m.id);
           const columns = data.modelDays || [];
           const fmt = usageCore.homeShortDateFormat(lang);
@@ -874,6 +891,7 @@
           ap(panel, listEl);
         }
       });
+      if (focusSel) try { panel.querySelector?.(focusSel)?.focus?.(); } catch {}
     };
 
     return {

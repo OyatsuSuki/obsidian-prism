@@ -1069,6 +1069,9 @@ function createMockStudioDom(initialTitle = 'obsidian-prism — Antigravity') {
       return out;
     }
     querySelector(sel) { return this.querySelectorAll(sel)[0] || null; }
+    contains(node) { let cur = node; while (cur) { if (cur === this) return true; cur = cur.parentElement; } return false; }
+    focus() { doc.activeElement = this; }
+    click() { this.listeners.get('click')?.({ currentTarget: this, target: this }); }
   }
 
   const doc = {
@@ -1076,7 +1079,9 @@ function createMockStudioDom(initialTitle = 'obsidian-prism — Antigravity') {
     documentElement: null,
     head: null,
     body: null,
+    activeElement: null,
     createElement(tag) { return new MockNode(tag); },
+    createElementNS(_ns, tag) { return new MockNode(tag); },
     createDocumentFragment() { return new MockNode('#FRAGMENT'); },
     getElementById(id) {
       const find = (n) => {
@@ -3543,9 +3548,10 @@ test('Home Studio distinguishes cumulative vs active-only sessions and toggles f
       setItem: (k, v) => storeMem.set(k, String(v)),
       removeItem: (k) => storeMem.delete(k),
     };
-    globalThis.document = { documentElement: { removeAttribute() {} }, title: 'Antigravity', querySelector: () => null };
+    const dom = createMockStudioDom('Antigravity');
+    globalThis.document = dom.doc;
     globalThis.window = {
-      document: globalThis.document,
+      document: dom.doc,
       __agPrismUsageBridge: {
         isOnline: () => true,
         listSummaries: async () => ({
@@ -3578,9 +3584,42 @@ test('Home Studio distinguishes cumulative vs active-only sessions and toggles f
     const saved = JSON.parse(storeMem.get(key) || '{}');
     assert.equal(Boolean(saved[liveMain.cascadeId]?.archived), false, 'Live conversation must not be marked archived');
     assert.equal(saved[archMain.cascadeId]?.archived, true, 'Deleted conversation must be marked archived: true');
-    const hspSrc = require('node:fs').readFileSync(require('node:path').join(process.cwd(), 'home-studio-panel.js'), 'utf8');
+
+    // Verify rendered toolbar toggle, Better Icons SVG, static KPI subtitle, focus preservation, and Models tab visibility
+    ctl.renderHomePanel(true);
+    const tg1 = dom.doc.querySelector('.ag-cs-home-head-right [data-ag-scope-toggle]');
+    assert.ok(tg1, 'Scope toggle must render inside top .ag-cs-home-head-right toolbar');
+    assert.equal(tg1.getAttribute('aria-pressed'), 'false', 'Default cumulative mode must set aria-pressed="false"');
+    const svgEl = tg1.querySelector('svg');
+    const pathEl = svgEl?.querySelector('path');
+    assert.equal(svgEl?.getAttribute('aria-hidden'), 'true', 'Toggle SVG icon must be decorative (aria-hidden="true")');
+    assert.equal(pathEl?.getAttribute('d'), 'M7 10h14l-4-4m0 8H3l4 4', 'Toggle icon must use Better Icons tabler:arrows-exchange path');
+    const sub1 = dom.doc.querySelector('[data-stat="sessions"] .ag-cs-home-stat-sub');
+    assert.equal(sub1?.tagName, 'SPAN', 'Sessions KPI subtitle must be a non-interactive static <span>');
+    assert.ok(sub1?.textContent.includes('1'), 'Sessions subtitle must display active/archived breakdown');
+
+    tg1.focus();
+    tg1.click();
+    const tg2 = dom.doc.querySelector('.ag-cs-home-head-right [data-ag-scope-toggle]');
+    assert.equal(tg2?.getAttribute('aria-pressed'), 'true', 'Active-only mode must set aria-pressed="true"');
+    assert.equal(storeMem.get('ag-prism:homeSessionScope.v1'), 'active', 'Toggle must persist active scope to ag-prism:homeSessionScope.v1');
+    assert.equal(dom.doc.activeElement, tg2, 'Keyboard focus must be restored to [data-ag-scope-toggle] across panel re-render');
+
+    const modelsTab = dom.doc.querySelector('[data-tab="models"]');
+    modelsTab.click();
+    const tgModels = dom.doc.querySelector('.ag-cs-home-head-right [data-ag-scope-toggle]');
+    assert.ok(tgModels, 'Scope toggle must remain visible on the Models tab');
+    assert.equal(tgModels.getAttribute('aria-pressed'), 'true');
+
+    const hspSrc = require('node:fs').readFileSync(require.resolve('../home-studio-panel.js'), 'utf8');
     assert.equal(hspSrc.includes('⇄'), false, 'Session scope toggle must use vector SVG icon instead of Unicode ⇄ arrow');
-    assert.ok(hspSrc.includes('M2 4h8M8 2l2 2-2 2M10 8H2M4 6 2 8l2 2'), 'Session scope toggle must render inline vector swap SVG');
+    assert.ok(hspSrc.includes('M7 10h14l-4-4m0 8H3l4 4'), 'Session scope toggle must render Better Icons tabler:arrows-exchange SVG path');
+    assert.ok(hspSrc.includes("'aria-hidden', 'true'") && hspSrc.includes("'aria-pressed'"), 'Scope toggle must set aria-hidden on SVG and aria-pressed on button');
+    assert.ok(hspSrc.includes(':focus-visible{outline:2px solid var(--_a)'), 'Toolbar controls must expose visible keyboard focus rings');
+    assert.ok(hspSrc.includes("ag-prism:homeSessionScope.v1"), 'Scope preference storage key must stay unified');
+    const cdp = require('../cdp.js');
+    const ch1Bytes = Buffer.byteLength(cdp.buildInjectExpression(cdp.DEFAULT_CONFIG), 'utf8');
+    assert.ok(ch1Bytes < 685000, `PR #41 Channel 1 DEFAULT_CONFIG bundle (${ch1Bytes} B) must stay < 685,000 B`);
   } finally {
     globalThis.window = prevWin;
     globalThis.document = prevDoc;
