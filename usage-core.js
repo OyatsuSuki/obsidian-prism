@@ -729,16 +729,19 @@ losttime|1647000|追忆似水年华|追憶似水年華|失われた時を求め�
   function createHomeModelColours() {
     const assigned = new Map();
     return function assign(ids) {
-      const out = {};
-      for (const id of Array.from(new Set(ids)).sort()) {
-        if (assigned.has(id)) { out[id] = assigned.get(id); continue; }
-        const used = new Set(assigned.values());
-        let h = 2166136261;
-        for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
-        let c = (h >>> 0) % HOME_MODEL_COLOUR_COUNT;
-        while (used.size < HOME_MODEL_COLOUR_COUNT && used.has(c)) c = (c + 1) % HOME_MODEL_COLOUR_COUNT;
-        assigned.set(id, c);
-        out[id] = c;
+      const out = {}, used = new Set(), uniq = Array.from(new Set(ids));
+      for (const id of uniq) {
+        if (!assigned.has(id)) continue;
+        const c = assigned.get(id);
+        if (!used.has(c)) { out[id] = c; used.add(c); }
+      }
+      let next = 0;
+      for (const id of uniq) {
+        if (Object.prototype.hasOwnProperty.call(out, id)) continue;
+        while (used.has(next)) next++;
+        assigned.set(id, next);
+        out[id] = next;
+        used.add(next);
       }
       return out;
     };

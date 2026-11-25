@@ -853,6 +853,13 @@ de|Subagenten|Token||Ein|Aus|Wenig Kontingent|Wird knapp|Reichlich|Was steht als
           const fmt = usageCore.homeShortDateFormat(lang);
           for (const col of columns) for (const id of Object.keys(col.models || {})) ids.push(id);
           const colours = modelColours(ids);
+          const paletteCount = usageCore.HOME_MODEL_COLOUR_COUNT || 10;
+          const colorEl = (cls, idx) => {
+            const ci = Number.isFinite(idx) && idx >= 0 ? idx : 0;
+            const el = sp(cls, { 'data-color': String(ci) });
+            if (ci >= paletteCount) el.style.background = `hsl(${Math.round(((ci - paletteCount) * 137.508 + 22) % 360)} 68% 52%)`;
+            return el;
+          };
 
           if (columns.length > 0) {
             let peak = 0;
@@ -879,7 +886,7 @@ de|Subagenten|Token||Ein|Aus|Wenig Kontingent|Wird knapp|Reichlich|Was steht als
               colEl.title = `${usageCore.homeShortDate(fmt, col.date)} · ${fmtTok(dayTotal)}`;
               colEl.style.height = `${top > 0 ? (dayTotal / top) * 100 : 0}%`;
               for (const [mId, tok] of Object.entries(col.models).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))) {
-                const seg = sp(cC + 'seg', { 'data-color': String(colours[mId] ?? 0) });
+                const seg = colorEl(cC + 'seg', colours[mId]);
                 seg.style.height = `${dayTotal > 0 ? (tok / dayTotal) * 100 : 0}%`;
                 ap(colEl, seg);
               }
@@ -936,7 +943,7 @@ de|Subagenten|Token||Ein|Aus|Wenig Kontingent|Wird knapp|Reichlich|Was steht als
             row.title = `${m.id} · ${m.sessions} ${ui.sessionsUnit || 'sessions'}${subShare}`;
             const inp = (m.input || 0) + (m.cacheRead || 0) + (m.cacheWrite || 0);
             const cacheTag = isFin(m.cacheHitRate) ? ` · ${Math.round(m.cacheHitRate * 100)}% ${ui.cacheShort || 'Cache'}` : '';
-            ap(listEl, ap(row, sp(mC + '-swatch', { 'data-color': String(colours[m.id] ?? 0) }), sp(mC + '-name', m.id), sp(mC + '-split', `${fmtTok(inp)} ${inUnit} · ${fmtTok(m.output || 0)} ${outUnit}${cacheTag}`), sp(mC + '-share', totalAll > 0 ? (Math.round((m.tokens / totalAll) * 1000) / 10).toFixed(1) + '%' : '—')));
+            ap(listEl, ap(row, colorEl(mC + '-swatch', colours[m.id]), sp(mC + '-name', m.id), sp(mC + '-split', `${fmtTok(inp)} ${inUnit} · ${fmtTok(m.output || 0)} ${outUnit}${cacheTag}`), sp(mC + '-share', totalAll > 0 ? (Math.round((m.tokens / totalAll) * 1000) / 10).toFixed(1) + '%' : '—')));
           }
           if (models.length > rowCap) {
             const hc = models.length - shown.length;
