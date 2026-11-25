@@ -2050,11 +2050,124 @@ const WIN_WMI_CREATE_PS = [
 ].join('\n');
 const WIN_WMI_CREATE_B64 = Buffer.from(WIN_WMI_CREATE_PS, 'utf16le').toString('base64');
 
-function requestGracefulHostQuit(hostPid, exePath, platform = process.platform) {
+function normalizeLoopbackCdpPort(rawPort) {
+  const n = Number(rawPort);
+  return Number.isInteger(n) && n >= 1 && n <= 65535 ? n : 0;
+}
+
+/**
+ * 通过本机回环 CDP 浏览器端点发送标准 Browser.close 请求宿主优雅退出（触发 Electron app.quit()，
+ * 避免 Windows 托盘拦截 WM_CLOSE 导致 CloseMainWindow() 仅最小化到托盘而不退出）。
+ * 严禁跨主机请求；任何网络/协议/超时异常均安全返回 false，交由 OS 级温和退出回退。
+ */
+export async function requestCdpBrowserClose(cdpPort, opts = {}) {
+  const port = normalizeLoopbackCdpPort(cdpPort);
+  if (!port) return false;
+  const fetchImpl = typeof opts.fetchImpl === 'function' ? opts.fetchImpl : globalThis.fetch;
+  const WsCtor = typeof opts.WebSocketCtor === 'function' ? opts.WebSocketCtor : globalThis.WebSocket;
+  if (typeof fetchImpl !== 'function' || typeof WsCtor !== 'function') return false;
+  const timeoutMs = Math.max(200, Math.min(8000, Number(opts.timeoutMs) || 2500));
+
+  let wsUrl = '';
+  try {
+    const controller = new AbortController();
+    const fetchTimer = setTimeout(() => controller.abort(), Math.min(1500, timeoutMs));
+    if (fetchTimer && typeof fetchTimer.unref === 'function') fetchTimer.unref();
+    try {
+      const res = await fetchImpl(`http://127.0.0.1:${port}/json/version`, { signal: controller.signal });
+      if (!res || !res.ok) return false;
+      const info = await res.json();
+      wsUrl = typeof info?.webSocketDebuggerUrl === 'string' ? info.webSocketDebuggerUrl.trim() : '';
+    } finally {
+      clearTimeout(fetchTimer);
+    }
+  } catch {
+    return false;
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(wsUrl);
+  } catch {
+    return false;
+  }
+  const hostOk = parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost' || parsed.hostname === '[::1]';
+  const portNum = parsed.port ? Number(parsed.port) : 80;
+  if (parsed.protocol !== 'ws:' || !hostOk || portNum !== port || !parsed.pathname.startsWith('/devtools/browser/')) {
+    return false;
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let sent = false;
+    let ws = null;
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try {
+        if (ws && typeof ws.close === 'function') ws.close();
+      } catch {}
+      resolve(Boolean(ok));
+    };
+    const timer = setTimeout(() => finish(sent), timeoutMs);
+    if (timer && typeof timer.unref === 'function') timer.unref();
+    try {
+      ws = new WsCtor(parsed.href);
+    } catch {
+      finish(false);
+      return;
+    }
+    const onOpen = () => {
+      try {
+        ws.send(JSON.stringify({ id: 1, method: 'Browser.close' }));
+        sent = true;
+      } catch {
+        finish(false);
+      }
+    };
+    const onMessage = (evt) => {
+      try {
+        const raw = typeof evt === 'string' ? evt : evt?.data;
+        const msg = JSON.parse(String(raw || ''));
+        if (msg && msg.id === 1) {
+          finish(!msg.error);
+        }
+      } catch {}
+    };
+    const onClose = () => finish(sent);
+    const onError = () => finish(sent);
+    if (typeof ws.addEventListener === 'function') {
+      ws.addEventListener('open', onOpen, { once: true });
+      ws.addEventListener('message', onMessage);
+      ws.addEventListener('close', onClose, { once: true });
+      ws.addEventListener('error', onError, { once: true });
+    } else if (typeof ws.on === 'function') {
+      ws.once('open', onOpen);
+      ws.on('message', onMessage);
+      ws.once('close', onClose);
+      ws.once('error', onError);
+    } else {
+      finish(false);
+    }
+  });
+}
+
+export async function requestGracefulHostQuit(hostPid, exePath, platform = process.platform, opts = {}) {
+  const cdpPort = normalizeLoopbackCdpPort(opts?.cdpPort);
+  const cdpCloseFn = typeof opts?.requestCdpClose === 'function' ? opts.requestCdpClose : requestCdpBrowserClose;
+  if (cdpPort > 0) {
+    try {
+      const closedViaCdp = await cdpCloseFn(cdpPort, opts);
+      if (closedViaCdp) return true;
+    } catch {}
+  }
+  const execSyncFn = typeof opts?.execFileSyncFn === 'function' ? opts.execFileSyncFn : execFileSync;
+  const killFn = typeof opts?.killFn === 'function' ? opts.killFn : process.kill;
   try {
     if (platform === 'win32') {
-      // 仅向 Antigravity 主窗口发 WM_CLOSE 温和退出，绝不强杀 language_server.exe
-      execFileSync(
+      // 回退：仅向 Antigravity 主窗口发 WM_CLOSE 温和退出，绝不强杀 language_server.exe
+      execSyncFn(
         'powershell.exe',
         ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-EncodedCommand', WIN_GRACEFUL_CLOSE_B64],
         { windowsHide: true, timeout: 5000, stdio: 'ignore' }
@@ -2064,7 +2177,7 @@ function requestGracefulHostQuit(hostPid, exePath, platform = process.platform) 
     if (platform === 'darwin') {
       const appPath = normalizeMacAppBundlePath(exePath);
       try {
-        execFileSync(
+        execSyncFn(
           'osascript',
           ['-e', 'on run argv', '-e', 'tell application (item 1 of argv) to quit', '-e', 'end run', appPath],
           { timeout: 5000, stdio: 'ignore' }
@@ -2072,12 +2185,12 @@ function requestGracefulHostQuit(hostPid, exePath, platform = process.platform) 
         return true;
       } catch {}
       if (Number.isInteger(hostPid) && hostPid > 0) {
-        try { process.kill(hostPid, 'SIGTERM'); return true; } catch {}
+        try { killFn(hostPid, 'SIGTERM'); return true; } catch {}
       }
       return false;
     }
     if (Number.isInteger(hostPid) && hostPid > 0) {
-      try { process.kill(hostPid, 'SIGTERM'); return true; } catch {}
+      try { killFn(hostPid, 'SIGTERM'); return true; } catch {}
     }
     return false;
   } catch {
@@ -2181,6 +2294,7 @@ export async function executeArchiveTaskSequence(task = {}, hooks = {}) {
   const convDir = task.convDir ? path.resolve(String(task.convDir)) : getDefaultConversationsDir();
   const archiveDir = task.archiveDir ? path.resolve(String(task.archiveDir)) : getDefaultArchiveDir();
   const hostPid = Number(task.hostPid) || 0;
+  const cdpPort = normalizeLoopbackCdpPort(task.cdpPort);
   const exePath = String(task.exePath || '').trim();
   const gracefulQuit = Boolean(task.gracefulQuit);
   const relaunch = Boolean(task.relaunch);
@@ -2203,7 +2317,7 @@ export async function executeArchiveTaskSequence(task = {}, hooks = {}) {
   const quitHost =
     typeof hooks.requestGracefulQuit === 'function'
       ? hooks.requestGracefulQuit
-      : () => requestGracefulHostQuit(hostPid, exePath);
+      : (pid, exe, quitOpts) => requestGracefulHostQuit(pid, exe, process.platform, quitOpts);
   const launchHost =
     typeof hooks.launchHost === 'function'
       ? hooks.launchHost
@@ -2214,7 +2328,7 @@ export async function executeArchiveTaskSequence(task = {}, hooks = {}) {
   writeActiveArchiveTask(archiveDir, { action, pid: process.pid });
   try {
     if (gracefulQuit && safeIsRunning()) {
-      await quitHost(hostPid, exePath);
+      await quitHost(hostPid, exePath, { cdpPort, attempt: 1 });
     }
 
     // 等待 Antigravity 与 language_server 完全退出
@@ -2230,7 +2344,7 @@ export async function executeArchiveTaskSequence(task = {}, hooks = {}) {
       }
       if (gracefulQuit && !nudged && Date.now() >= nudgeAt) {
         nudged = true;
-        await quitHost(hostPid, exePath);
+        await quitHost(hostPid, exePath, { cdpPort: 0, attempt: 2 });
       }
     }
     if (!exited) {
@@ -2404,6 +2518,7 @@ export function spawnDetachedArchiveTask(task = {}, opts = {}) {
     convDir: path.resolve(task.convDir || getDefaultConversationsDir()),
     archiveDir,
     hostPid: Number(task.hostPid) || 0,
+    cdpPort: normalizeLoopbackCdpPort(task.cdpPort),
     exePath: String(task.exePath || '').trim(),
     gracefulQuit: Boolean(task.gracefulQuit),
     relaunch: Boolean(task.relaunch),

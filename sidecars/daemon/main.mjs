@@ -2906,6 +2906,10 @@ export class PrismDaemon {
           try { host = await this.cdp.detectRunningAntigravityHost(); } catch {}
         }
 
+        const rawCdpPort =
+          _testOverrides?.cdpPort !== undefined
+            ? _testOverrides.cdpPort
+            : this.overridePort || (!_testOverrides ? (discoverActivePort(this.overridePort, this.portFile) || this.cdpPort || 0) : 0);
         const scriptPath = path.join(this.rootDir, 'sidecars', 'daemon', 'conversation-archive.mjs');
         const spawnRes = arch.spawnDetachedArchiveTask(
           {
@@ -2913,6 +2917,7 @@ export class PrismDaemon {
             convDir,
             archiveDir,
             hostPid: host?.pid || 0,
+            cdpPort: Number(rawCdpPort) || 0,
             exePath: host?.exePath || '',
             gracefulQuit: true,
             relaunch: true,
@@ -3021,6 +3026,10 @@ export class PrismDaemon {
         } else if (typeof this.cdp?.detectRunningAntigravityHost === 'function') {
           try { host = await this.cdp.detectRunningAntigravityHost(); } catch {}
         }
+        const rawCdpPort =
+          _testOverrides?.cdpPort !== undefined
+            ? _testOverrides.cdpPort
+            : this.overridePort || (!_testOverrides ? (discoverActivePort(this.overridePort, this.portFile) || this.cdpPort || 0) : 0);
         const scriptPath = path.join(this.rootDir, 'sidecars', 'daemon', 'conversation-archive.mjs');
         const spawnRes = arch.spawnDetachedArchiveTask(
           {
@@ -3028,6 +3037,7 @@ export class PrismDaemon {
             convDir,
             archiveDir,
             hostPid: host?.pid || 0,
+            cdpPort: Number(rawCdpPort) || 0,
             exePath: host?.exePath || '',
             gracefulQuit: true,
             relaunch: true,
