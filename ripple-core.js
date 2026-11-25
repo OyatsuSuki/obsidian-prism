@@ -55,7 +55,7 @@
     prismThreshold: 0.20,
     nebulaTint: 0.58,
     nebulaLift: 1.08,
-    nebulaFrameMs: 40,
+    nebulaFrameMs: 28,
     nebulaPeriods: [8.4, 10.8, 12.8],
   };
   const WAVE_STEP = 1 / 600;
@@ -1400,7 +1400,7 @@ color = vec4(rgb * a, a);
           eff.dark !== lastIdleDark ||
           eff.alphaScale !== lastIdleAlphaScale ||
           renderer.mode !== 'webgl2' ||
-          Math.abs(now - lastIdleRefreshMs) >= 40;
+          Math.abs(now - lastIdleRefreshMs) >= RIPPLE.nebulaFrameMs;
 
         if (renderer.mode === 'webgl2' && !needIdleRefresh && !waveActive && !glowing && burst <= 0) {
           renderer.draw(eff, canvas.width / (columns * cellWidth), false);
@@ -2326,8 +2326,8 @@ outColor = clamp(vec4(premulRgb, outAlpha), 0.0, 1.0);
     }
     const force2D = Boolean(options.prefer2D || options.force2D) || (typeof globalThis !== 'undefined' && globalThis.__agRippleForce2D === true);
     const renderer = (force2D ? null : createBrandHorizonGLRenderer(canvas)) || createBrandHorizon2DRenderer(canvas);
-    let cssW = Math.max(0, Number(options.width || canvas.clientWidth || 0));
-    let cssH = Math.max(0, Number(options.height || canvas.clientHeight || 0));
+    let cssW = Math.max(0, Number(options.width ?? canvas.clientWidth ?? 0));
+    let cssH = Math.max(0, Number(options.height ?? canvas.clientHeight ?? 0));
     let dpr = Math.max(0.5, Math.min(1.75, Number(options.dpr || 1)));
     const baseAura = {
       reach: clampFinite(options.reach, DEFAULT_HORIZON_AURA.reach, 0.05, 1),

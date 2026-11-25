@@ -160,7 +160,8 @@
       const c = mode === 'conv';
       const cp = c ? C_P[lv] || C_P.medium : null;
       const radius = cp ? cp[7] : 230;
-      const on = Boolean(aSt?.active && !motionReduced() && amb > 0.001);
+      const fd = aSt?.f ?? 1;
+      const on = Boolean(aSt?.active && fd > 0.005 && !motionReduced() && amb > 0.001);
       const baseP = sp === 'mono' ? 0.45 : 1;
       return {
         ink: t.ink,
@@ -175,7 +176,7 @@
         ambientIntensity: amb,
         spectrum: sp,
         nebula: amb <= 0.001 ? false : undefined,
-        aura: on ? { x: aSt.x, y: aSt.y, radius, strength: amb * (cp ? cp[3] : 1), active: true } : { x: 0, y: 0, radius, strength: 0, active: false },
+        aura: on ? { x: aSt.x, y: aSt.y, radius, strength: amb * (cp ? cp[3] : 1) * fd, active: true } : { x: 0, y: 0, radius, strength: 0, active: false },
         auraPhase: (now || 0) * (cp ? 0.00045 + 0.00015 * cp[3] : 0.0006),
       };
     }
@@ -327,9 +328,7 @@
       let pw = 0;
       let ph = 0;
       let shrunk = false;
-      let fLost = false;
-      let gLost = false;
-      let recTries = 0;
+      let fLost = false, gLost = false, recTries = 0, aT = null, wSlp = 0, aWk = 0;
 
       const state = {
         mode,
@@ -390,7 +389,7 @@
       function mountGlow(p2d, sw) {
         if (!state.glowCanvas) return;
         if (sw) { try { state.glow?.dispose?.(true); } catch {} state.glowCanvas = swapCv(state.glowCanvas, G_CLS, G_TID, 1); }
-        const mk = (u) => (hasG ? rippleCore.mountBrandHorizonGlow(state.glowCanvas, { prefer2D: !!u, onContextLost: () => onLost(0) }) : { mode: 'none', resize() {}, draw() {}, dispose() {} });
+        const mk = (u) => (hasG ? rippleCore.mountBrandHorizonGlow(state.glowCanvas, { prefer2D: !!u, width: 0, height: 0, onContextLost: () => onLost(0) }) : { mode: 'none', resize() {}, draw() {}, dispose() {} });
         let g = mk(p2d);
         if (hasG && g?.mode === 'none' && !p2d) {
           try { g.dispose?.(true); } catch {}
@@ -542,6 +541,7 @@
       function enterIdleSleep() {
         stopTimers(state);
         wanted = false;
+        wSlp = 1;
         state.sleeping = true;
         setAttrIfChanged(host, 'data-ripple-sleep', '1');
       }
@@ -582,7 +582,7 @@
         lastTs = now;
         const rawGap = Math.max(0, Number(getMinFrameGapMs?.() ?? 0) || 0);
         const minGap =
-          (state.mode === 'home' || state.convLevel === 'full') && (state.waves?.active?.() || (auraState.active && lsa > 0 && now - lsa < 180) || (tideAt > 0 && now - tideAt < 480))
+          (state.mode === 'home' || state.convLevel === 'full') && (state.waves?.active?.() || (auraState.active && lsa > 0 && now - lsa < 650) || (tideAt > 0 && now - tideAt < 480))
             ? rawGap
             : Math.max(33, rawGap);
         if (!still && drawn && !force1 && minGap > 0 && lastDraw > 0 && now - lastDraw < minGap && !hP()) {
@@ -594,7 +594,10 @@
           return;
         }
         lastDraw = now;
-        state.waves.advance(still ? 0 : cl((now - prev) / 1000, 0, 0.05));
+        const dtMs = still ? 0 : wSlp ? Math.min(16, Math.max(0, now - prev)) : cl(now - prev, 0, 50);
+        aT = aT === null ? now : aT + dtMs;
+        wSlp = 0;
+        state.waves.advance(still ? 0 : cl(dtMs / 1000, 0, 0.05));
         prev = now;
         const te = state.mode === 'home' && tideAt > 0 ? now - tideAt : -1;
         const inT = !still && te >= 0 && te < 480;
@@ -611,25 +614,34 @@
 
         const amb = ambScale();
         if (amb <= 0.001 && auraState.active) auraState.active = false;
+        let aSet = 0;
+        if (!streaming && amb > 0.001 && auraState.active && lsa > 0) {
+          const age = Math.max(0, now - lsa);
+          if (age >= IDLE_MS) { auraState.active = false; auraState.f = 0; aSet = 1; }
+          else {
+            const u = age <= 750 ? 1 : (IDLE_MS - age) / 450;
+            auraState.f = u * u * (3 - 2 * u) * (aWk && now - aWk < 180 ? cl((now - aWk) / 180, 0.12, 1) : 1);
+          }
+        }
         const aRec = !streaming && amb > 0.001 && auraState.active && lsa > 0 && now - lsa < IDLE_MS;
         const inI = state.mode === 'home' && !still && amb > 0.001 && now - mountedAt < INTRO_MS;
         const busy = !streaming && Boolean(state.field?.busy?.());
-        const need = force1 || !drawn || (Boolean(state.glowCanvas) && amb <= 0.001 && !gZero) || inT || inI || aRec || (!streaming && Boolean(state.field?.needsDraw(now, still)));
+        const need = force1 || !drawn || aSet || (Boolean(state.glowCanvas) && amb <= 0.001 && !gZero) || inT || inI || aRec || (!streaming && Boolean(state.field?.needsDraw(aT, still)));
 
         if (hasSz(canvas) && need) {
           force1 = false;
           if (!tok) tok = sampleTok(canvas);
           const sp = specMode(tok.dark);
-          const pal = buildPal(tok, auraState, now, amb, sp, state.mode, state.convLevel);
+          const pal = buildPal(tok, auraState, aT, amb, sp, state.mode, state.convLevel);
           if (hasSz(state.glowCanvas)) {
             if (amb <= 0.001) {
               if (!gZero) { state.glow?.clear?.(); gZero = true; }
             } else {
               gZero = false;
-              state.glow?.draw?.(now, { dark: pal.dark, still, strength: inT ? state.aura.strength : 1, reach: state.aura.reach, ambientIntensity: amb, spectrum: sp });
+              state.glow?.draw?.(aT, { dark: pal.dark, still, strength: inT ? state.aura.strength : 1, reach: state.aura.reach, ambientIntensity: amb, spectrum: sp });
             }
           }
-          state.field.draw(now, pal, still);
+          state.field.draw(aT, pal, still);
           drawn = true;
         }
 
@@ -650,6 +662,8 @@
         fLost = gLost = false;
         recTries = 0;
         prev = nowOf();
+        wSlp = 1;
+        aWk = 0;
         wanted = false;
         force1 = true;
         auraState.active = false;
@@ -712,6 +726,7 @@
         ly = y;
         lsa = now;
         if (ambScale() > 0.001) {
+          if (!auraState.active || state.sleeping) aWk = now;
           auraState.x = x;
           auraState.y = y;
           auraState.active = true;
