@@ -29,6 +29,7 @@ test('step-plan checklist card and all item states share Obsidian Prism jewel st
   assert.ok(itemLine.includes('&[data-status="pending"]{'), 'must style pending state');
   assert.ok(itemLine.includes('&[data-status="failed"]{'), 'must style failed state');
   assert.ok(itemLine.includes('&[data-status="skipped"]{'), 'must style skipped state');
+  assert.ok(itemLine.includes('translate:-50% -50%;') && !itemLine.includes('transform:translate('), 'pseudo-element centering must use individual translate before individual rotate (CSS Transforms L2 order)');
   assert.equal(itemLine.includes('opacity:'), false, 'step-plan-item text must not stack low opacity over --muted-foreground');
 
   // State transition keyframe, reduced-motion (--_sa:none), and Windows High Contrast fallback
