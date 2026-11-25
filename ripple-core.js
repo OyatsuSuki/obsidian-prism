@@ -759,7 +759,7 @@ color = vec4(rgb * a, a);
   }
   function createWebGL2Renderer(canvas, columns, rows) {
     const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, preserveDrawingBuffer: false });
-    if (!gl) return null;
+    if (!gl || gl.isContextLost?.()) return null;
     const atlasCanvas = canvas.ownerDocument.createElement('canvas');
     const atlasContext = atlasCanvas.getContext('2d');
     if (!atlasContext) return null;
@@ -829,7 +829,17 @@ color = vec4(rgb * a, a);
       gl.uniform1f(uniforms.glyphCount, GLYPHS.length);
       atlasKey = key;
     }
-    build();
+    function free() {
+      if (program) gl.deleteProgram(program);
+      if (cellTexture) gl.deleteTexture(cellTexture);
+      if (atlasTexture) gl.deleteTexture(atlasTexture);
+    }
+    try {
+      build();
+    } catch {
+      try { free(); } catch {}
+      return null;
+    }
     return {
       mode: 'webgl2',
       data,
@@ -869,11 +879,9 @@ color = vec4(rgb * a, a);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       },
-      dispose() {
-        gl.deleteProgram(program);
-        gl.deleteTexture(cellTexture);
-        gl.deleteTexture(atlasTexture);
-        try { gl.getExtension?.('WEBGL_lose_context')?.loseContext?.(); } catch {}
+      dispose(keep) {
+        free();
+        if (!keep) try { gl.getExtension?.('WEBGL_lose_context')?.loseContext?.(); } catch {}
       },
     };
   }
@@ -1501,12 +1509,12 @@ color = vec4(rgb * a, a);
         lastDraw = now;
         stale = false;
       },
-      dispose() {
+      dispose(keep) {
         if (canvas && canvas.removeEventListener) {
           canvas.removeEventListener('webglcontextlost', onContextLost);
           canvas.removeEventListener('webglcontextrestored', onContextRestored);
         }
-        if (renderer) renderer.dispose();
+        if (renderer) renderer.dispose(keep);
       },
     };
   }
@@ -1919,7 +1927,7 @@ outColor = clamp(vec4(premulRgb, outAlpha), 0.0, 1.0);
     const gl = canvas && canvas.getContext
       ? canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, preserveDrawingBuffer: false })
       : null;
-    if (!gl) return null;
+    if (!gl || gl.isContextLost?.()) return null;
     let program = null;
     const u = {};
     function compile(type, source) {

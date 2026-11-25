@@ -106,19 +106,29 @@
       };
     }
 
+    function bindRoot(el, m, add) {
+      const fn = add ? 'addEventListener' : 'removeEventListener';
+      const opt = add ? { passive: true } : undefined;
+      el[fn]('pointerdown', m.onPress, opt);
+      m.onMove && el[fn]('pointermove', m.onMove, opt);
+      m.onLeave && el[fn]('pointerleave', m.onLeave, opt);
+    }
+
     function unbindRoot(m) {
       if (!m?.root) return;
-      m.root.removeEventListener('pointerdown', m.onPress);
-      m.onMove && m.root.removeEventListener('pointermove', m.onMove);
-      m.onLeave && m.root.removeEventListener('pointerleave', m.onLeave);
+      bindRoot(m.root, m, false);
       m.root = null;
+    }
+
+    function stopTimers(m) {
+      if (m.timer) { clearTimeout(m.timer); m.timer = 0; }
+      if (m.rafId) { cancelAnimationFrame(m.rafId); m.rafId = 0; }
+      if (m.rRaf && typeof cancelAnimationFrame === 'function') { cancelAnimationFrame(m.rRaf); m.rRaf = 0; }
     }
 
     function parkRipple() {
       if (!rippleMount) return;
-      if (rippleMount.timer) { clearTimeout(rippleMount.timer); rippleMount.timer = 0; }
-      if (rippleMount.rafId) { cancelAnimationFrame(rippleMount.rafId); rippleMount.rafId = 0; }
-      if (rippleMount.rRaf && typeof cancelAnimationFrame === 'function') { cancelAnimationFrame(rippleMount.rRaf); rippleMount.rRaf = 0; }
+      stopTimers(rippleMount);
       rippleMount.ro?.disconnect();
       unbindRoot(rippleMount);
       rippleMount.host.remove();
@@ -129,9 +139,7 @@
     function unmountRipple() {
       if (!rippleMount) return;
       const m = rippleMount;
-      if (m.timer) { clearTimeout(m.timer); m.timer = 0; }
-      if (m.rafId) cancelAnimationFrame(m.rafId);
-      if (m.rRaf && typeof cancelAnimationFrame === 'function') { cancelAnimationFrame(m.rRaf); m.rRaf = 0; }
+      stopTimers(m);
       m.ro?.disconnect();
       m.uW?.();
       unbindRoot(m);
@@ -160,26 +168,24 @@
           rippleMount.parked = false;
           rippleMount.mountedAt = performance.now();
           home.insertBefore(rippleMount.host, home.firstChild);
-          home.addEventListener('pointerdown', rippleMount.onPress, { passive: true });
-          home.addEventListener('pointermove', rippleMount.onMove, { passive: true });
-          home.addEventListener('pointerleave', rippleMount.onLeave, { passive: true });
+          bindRoot(home, rippleMount, true);
           rippleMount.ro?.observe(home);
           rippleMount.reattach?.();
         }
         return;
       }
 
-      const host = document.createElement('div');
-      host.className = 'ag-cs-ripple-host';
-      host.setAttribute('aria-hidden', 'true');
-      const glowCanvas = document.createElement('canvas');
-      glowCanvas.className = 'ag-cs-brand-glow';
+      const mkEl = (tag, cls) => {
+        const el = document.createElement(tag);
+        el.className = cls;
+        el.setAttribute('aria-hidden', 'true');
+        return el;
+      };
+      const host = mkEl('div', 'ag-cs-ripple-host');
+      const glowCanvas = mkEl('canvas', 'ag-cs-brand-glow');
       glowCanvas.setAttribute('data-testid', 'onboarding-brand-glow');
-      glowCanvas.setAttribute('aria-hidden', 'true');
       host.appendChild(glowCanvas);
-      const canvas = document.createElement('canvas');
-      canvas.className = 'ag-cs-ripple-canvas';
-      canvas.setAttribute('aria-hidden', 'true');
+      let canvas = mkEl('canvas', 'ag-cs-ripple-canvas');
       host.appendChild(canvas);
       home.insertBefore(host, home.firstChild);
 
@@ -294,12 +300,17 @@
         ph = Math.round(rows * rippleCore.RIPPLE.cellHeight * dpr);
         shrunk = drawnOnce = false;
         forceSingleDraw = true;
+        state.field.dispose(true);
+        if (canvas.getContext?.('webgl2')?.isContextLost?.()) {
+          const next = mkEl('canvas', 'ag-cs-ripple-canvas');
+          canvas.replaceWith ? canvas.replaceWith(next) : host.replaceChild?.(next, canvas);
+          canvas = state.canvas = next;
+        }
         canvas.width = pw;
         canvas.height = ph;
         canvas.style.width = `${cols * rippleCore.RIPPLE.cellWidth}px`;
         canvas.style.height = `${rows * rippleCore.RIPPLE.cellHeight}px`;
         syncG(w, h);
-        state.field.dispose();
         state.waves = rippleCore.createWaveField(cols, rows);
         state.field = rippleCore.createGlyphField(canvas, cols, rows, state.waves);
         cachedThemeTokens = sampleRippleThemeTokens(canvas);
@@ -308,9 +319,7 @@
       }
 
       function enterIdleSleep() {
-        if (state.timer) { clearTimeout(state.timer); state.timer = 0; }
-        if (state.rafId) { cancelAnimationFrame(state.rafId); state.rafId = 0; }
-        if (state.rRaf) { cancelAnimationFrame(state.rRaf); state.rRaf = 0; }
+        stopTimers(state);
         frameWanted = false;
         state.sleeping = true;
         setAttrIfChanged(host, 'data-ripple-sleep', '1');
@@ -540,9 +549,7 @@
         onPointerPressMascot?.(ev.clientX);
       };
 
-      home.addEventListener('pointerdown', state.onPress, { passive: true });
-      home.addEventListener('pointermove', state.onMove, { passive: true });
-      home.addEventListener('pointerleave', state.onLeave, { passive: true });
+      bindRoot(home, state, true);
 
       const onVis = () => {
         if (document.hidden) return reclaim();

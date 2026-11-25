@@ -2130,10 +2130,10 @@
       }
 
       if (flags.f || flags.r || flags.t) {
-        rippleCtl.sync();
+        try { rippleCtl.sync(); } catch {}
       }
       if (flags.f || flags.r || flags.c || flags.t) {
-        convAuraCtl.sync(true);
+        try { convAuraCtl.sync(true); } catch {}
       }
       const modelPanelNow = measured.modelPanelNow;
       const modelOverlayChanged = measured.modelOverlayChanged;
