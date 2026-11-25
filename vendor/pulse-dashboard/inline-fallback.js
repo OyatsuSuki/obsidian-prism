@@ -12,6 +12,7 @@
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function (globalRoot) {
   'use strict';
+  const isFn = (v) => typeof v === 'function';
 
   const BAR_ID = 'ag-pulse-status-bar';
   const PRISM_BAR_ID = 'ag-prism-pulse-bar';
@@ -93,7 +94,7 @@
         if (v == null) continue;
         if (k === 'text') el.textContent = String(v);
         else if (k === 'cls') el.className = String(v);
-        else if (k === 'hidden') el.hidden = Boolean(v);
+        else if (k === 'hidden') el.hidden = !!(v);
         else el.setAttribute(k, String(v));
       }
     }
@@ -118,7 +119,7 @@
       if (!el || el.isConnected === false) return false;
       if (el.isConnected === true) return true;
       if (!el.parentNode && !el.parentElement) return false;
-      if (doc && typeof doc.getElementById === 'function' && el.id && typeof doc.querySelectorAll !== 'function') {
+      if (doc && isFn(doc.getElementById) && el.id && typeof doc.querySelectorAll !== 'function') {
         const b = doc.getElementById(el.id);
         if (b && b !== el) return false;
       }
@@ -136,7 +137,7 @@
       return first;
     };
 
-    const isCardOpen = (it) => Boolean(it && ((it.xCard && !it.xCard.hidden) || (it.sCard && !it.sCard.hidden)));
+    const isCardOpen = (it) => !!(it && ((it.xCard && !it.xCard.hidden) || (it.sCard && !it.sCard.hidden)));
 
     const resolveActiveInst = () => {
       const doc = gD();
@@ -226,7 +227,7 @@
 
     const ensWinResize = () => {
       const w = gW();
-      if (!winResOff && w && typeof w.addEventListener === 'function') {
+      if (!winResOff && w && isFn(w.addEventListener)) {
         const onR = () => {
           for (const it of insts.values()) schedTierRec(it, null);
           for (const et of extTiers.values()) schedTierRec(et, null);
@@ -239,7 +240,7 @@
     const attachTierRec = (rec) => {
       const w = gW();
       if (!w || !rec?.anc || mode === 'off') return;
-      if (!rec.ro && typeof w.ResizeObserver === 'function') {
+      if (!rec.ro && isFn(w.ResizeObserver)) {
         try {
           rec.ro = new w.ResizeObserver((entries) => schedTierRec(rec, entries));
           rec.ro.observe(rec.anc);
@@ -328,7 +329,7 @@
     const clrPoll = () => {
       if (pollTm !== null) { clearInterval(pollTm); pollTm = null; }
     };
-    const isBlur = () => { const d = gD(); return Boolean(d?.hidden || d?.documentElement?.getAttribute?.('data-ag-cs-win-blur') === '1' || winBlur); };
+    const isBlur = () => { const d = gD(); return !!(d?.hidden || d?.documentElement?.getAttribute?.('data-ag-cs-win-blur') === '1' || winBlur); };
     const clrBlur = () => { try { blurOff?.(); blurObs?.disconnect?.(); } catch {} blurOff = blurObs = null; winBlur = pollSusp = false; };
     const startPoll = () => {
       clrPoll();
@@ -348,12 +349,12 @@
     const ensBlur = () => {
       const w = gW(), d = gD();
       if (!w || !d) return;
-      if (!blurOff && typeof w.addEventListener === 'function') {
+      if (!blurOff && isFn(w.addEventListener)) {
         const onB = () => { winBlur = true; syncBlur(false); }, onF = () => { winBlur = false; syncBlur(true); }, onV = () => { if (!gD()?.hidden) winBlur = false; syncBlur(!gD()?.hidden); };
         w.addEventListener('blur', onB); w.addEventListener('focus', onF); d.addEventListener?.('visibilitychange', onV);
         blurOff = () => { w.removeEventListener?.('blur', onB); w.removeEventListener?.('focus', onF); d.removeEventListener?.('visibilitychange', onV); };
       }
-      if (!blurObs && typeof w.MutationObserver === 'function' && d.documentElement) {
+      if (!blurObs && isFn(w.MutationObserver) && d.documentElement) {
         try { blurObs = new w.MutationObserver(() => { const b = gD()?.documentElement?.getAttribute?.('data-ag-cs-win-blur') === '1'; if (!b) winBlur = false; syncBlur(!b); }); blurObs.observe(d.documentElement, { attributes: true, attributeFilter: ['data-ag-cs-win-blur'] }); } catch {}
       }
     };
@@ -380,13 +381,13 @@
     const findExtBars = (doc) => {
       if (!doc) return [];
       const seen = new Set(), out = [], add = (el) => { if (el && !seen.has(el)) { seen.add(el); out.push(el); } };
-      if (typeof doc.querySelectorAll === 'function') {
+      if (isFn(doc.querySelectorAll)) {
         try {
           const s = doc.querySelectorAll('#' + BAR_ID + ',[id^="' + BAR_ID + '"],[data-ag-pulse-bar="true"]');
           for (let i = 0; i < s.length; i++) add(s[i]);
         } catch {}
       }
-      if (typeof doc.getElementById === 'function') add(doc.getElementById(BAR_ID));
+      if (isFn(doc.getElementById)) add(doc.getElementById(BAR_ID));
       return out;
     };
 
@@ -450,7 +451,7 @@
         if (b && b.getAttribute?.(HID_ATTR) === '1') {
           b.removeAttribute(HID_ATTR);
           if (b.style) {
-            if (typeof b.style.removeProperty === 'function') {
+            if (isFn(b.style.removeProperty)) {
               b.style.removeProperty('display');
               for (let j = 0; j < HIDE_PROPS.length; j++) b.style.removeProperty(HIDE_PROPS[j][0]);
             } else {
@@ -479,7 +480,7 @@
           b.setAttribute(HID_ATTR, '1');
           if (b.style) {
             b.style.removeProperty?.('display');
-            if (typeof b.style.setProperty === 'function') {
+            if (isFn(b.style.setProperty)) {
               for (let j = 0; j < HIDE_PROPS.length; j++) b.style.setProperty(HIDE_PROPS[j][0], HIDE_PROPS[j][1], 'important');
             } else {
               b.style.position = 'fixed';
@@ -586,7 +587,7 @@
         const lb = tr?.getAttribute?.('aria-label') || tr?.textContent?.trim();
         if (lb) model = lb;
         const vw = scope && scope !== doc ? scope : doc?.querySelector?.('[data-testid="conversation-view"]');
-        if (vw && typeof vw.querySelectorAll === 'function') {
+        if (vw && isFn(vw.querySelectorAll)) {
           const ts = vw.querySelectorAll('[data-testid="planner-response-text"],[data-testid="agent-response"],[data-testid="user-message-bubble"]');
           if (ts?.length > 0) {
             const n = Math.min(4, ts.length);
@@ -715,11 +716,11 @@
       !el ||
       el.hidden === true ||
       el.style?.display === 'none' ||
-      Boolean(el.closest?.('.agy-home, aside, [data-testid="conversation-list-sidebar"], [data-testid="conversation-row-sidebar"], [hidden], [inert]'));
+      !!(el.closest?.('.agy-home, aside, [data-testid="conversation-list-sidebar"], [data-testid="conversation-row-sidebar"], [hidden], [inert]'));
     const isTopWrap = (p) => {
       if (!p) return true;
       const c = String(p.className || '').trim();
-      return Boolean(c && /\bmin-w-0\b/.test(c) && !/\b(?:flex|inline-flex|agy-composer-footer)\b/.test(c));
+      return !!(c && /\bmin-w-0\b/.test(c) && !/\b(?:flex|inline-flex|agy-composer-footer)\b/.test(c));
     };
 
     const findAnchors = (doc, knownConv = false) => {
@@ -727,8 +728,8 @@
       const w = gW();
       if (!knownConv && !isConv(doc, w)) return [];
       const out = [], seen = new Set();
-      let rawFts = typeof doc.querySelectorAll === 'function' ? Array.from(doc.querySelectorAll(FT_SEL)) : [];
-      if (rawFts.length === 0 && typeof doc.querySelector === 'function') {
+      let rawFts = isFn(doc.querySelectorAll) ? Array.from(doc.querySelectorAll(FT_SEL)) : [];
+      if (rawFts.length === 0 && isFn(doc.querySelector)) {
         const oneFt = doc.querySelector(FT_SEL);
         if (oneFt) rawFts = [oneFt];
       }
@@ -755,8 +756,8 @@
         out.push(ft);
       }
       if (out.length > 0) return out;
-      let mbs = typeof doc.querySelectorAll === 'function' ? Array.from(doc.querySelectorAll('[data-testid="model-selector-trigger"]')) : [];
-      if (mbs.length === 0 && typeof doc.querySelector === 'function') {
+      let mbs = isFn(doc.querySelectorAll) ? Array.from(doc.querySelectorAll('[data-testid="model-selector-trigger"]')) : [];
+      if (mbs.length === 0 && isFn(doc.querySelector)) {
         const oneMb = doc.querySelector('[data-testid="model-selector-trigger"]');
         if (oneMb) mbs = [oneMb];
       }
@@ -778,13 +779,13 @@
       if (ft && !isHidAnc(ft) && (knownConv || isConv(doc, w, ft))) return true;
       const mb = doc.querySelector?.('[data-testid="model-selector-trigger"]');
       const anc = mb?.parentElement;
-      return Boolean(anc && !isHidAnc(mb) && !isTopWrap(anc) && (knownConv || isConv(doc, w, mb)));
+      return !!(anc && !isHidAnc(mb) && !isTopWrap(anc) && (knownConv || isConv(doc, w, mb)));
     };
 
     const seatIn = (anc, el) => {
       if (!anc || !el) return false;
       const kids = anc.children || [];
-      if (/\bagy-composer-footer\b/.test(String(anc.className || '')) && kids.length >= 2 && typeof anc.insertBefore === 'function') {
+      if (/\bagy-composer-footer\b/.test(String(anc.className || '')) && kids.length >= 2 && isFn(anc.insertBefore)) {
         const last = kids[kids.length - 1];
         if (last && last !== el) { anc.insertBefore(el, last); return true; }
       }
@@ -897,7 +898,7 @@
       host.addEventListener?.('focusin', markAct);
 
       const tog = (card, btn) => {
-        const nx = Boolean(card.hidden);
+        const nx = !!(card.hidden);
         activeHost = host;
         for (const other of insts.values()) {
           if (other !== it) closeCards(other, false);
@@ -965,15 +966,18 @@
     };
 
     let lastHealAt = 0;
+    const HC_A = 'data-hover-card-popup';
+    const SB_SEL = 'aside,[data-testid="sidebar-split"]>div:first-child,[data-testid="conversation-row-sidebar"],[data-testid="project-header"],[data-hover-card-popup]';
     const IGN_STREAM_SEL =
-      '[data-testid="autoscroll-viewport"],[data-testid="planner-response-text"],[data-testid="agent-response"],[data-markdown-root],[data-testid="background-task-command"],[data-testid="running-items-card"],aside,[data-op-thought="1"],.ag-prism-thought-overlay,.ag-cs-conv-aura-host,.ag-cs-crab,.ag-cs-prism-rim-cv,.ag-anim-icon,.ag-cs-thinking-spark,[data-agy-hans-ui],#agy-theme-switcher,#agy-theme-menu,#antigravity-quota-widget,#antigravity-translation-audit';
+      '[data-testid="autoscroll-viewport"],[data-testid="planner-response-text"],[data-testid="agent-response"],[data-markdown-root],[data-testid="background-task-command"],[data-testid="running-items-card"],' + SB_SEL + ',[data-op-thought="1"],.ag-prism-thought-overlay,.ag-cs-conv-aura-host,.ag-cs-crab,.ag-cs-prism-rim-cv,.ag-anim-icon,.ag-cs-thinking-spark,[data-agy-hans-ui],#agy-theme-switcher,#agy-theme-menu,#antigravity-quota-widget,#antigravity-translation-audit';
+    const isHcPortal = (el) => {
+      if (!el || el.tagName === 'BODY' || el.tagName === 'HTML') return false;
+      const h = (n, k) => !!n?.hasAttribute?.(k), f = el.firstElementChild;
+      return h(el, HC_A) || h(f, HC_A) || h(f?.firstElementChild, HC_A) || (h(el, 'data-base-ui-portal') && !!el.querySelector?.('[data-hover-card-popup]'));
+    };
     const isIgnoredStreamNode = (t) => {
       const el = t?.nodeType === 1 ? t : t?.parentElement;
-      return Boolean(
-        el?.closest &&
-        !el.closest('.agy-composer-footer,[data-testid="input-box-bottom-toolbar"]') &&
-        el.closest(IGN_STREAM_SEL)
-      );
+      return !!(el && (isHcPortal(el) || (el.closest && !el.closest('.agy-composer-footer,[data-testid="input-box-bottom-toolbar"]') && el.closest(IGN_STREAM_SEL))));
     };
 
     const anchorsChanged = (doc) => {
@@ -1003,27 +1007,15 @@
         }
         if (mode === 'on') {
           hideExt(true);
-          if (insts.size > 0) {
-            const res = reconcileBars(d);
-            if (res.added.length > 0) void refresh();
-            else if (insts.size > 0) ensTierObs();
-          } else if (findAnchors(d, true).length > 0) {
-            mountFb();
-          }
-          return;
-        }
-        showExt();
-        if (hasExt(null, true)) {
-          yielded = true;
-          if (insts.size > 0) unmountFb(true);
-          ensTierObs();
-          return;
+        } else {
+          showExt();
+          if (hasExt(null, true)) { yielded = true; if (insts.size > 0) unmountFb(true); ensTierObs(); return; }
         }
         if (insts.size > 0) {
           const res = reconcileBars(d);
           if (res.added.length > 0) void refresh();
           else if (insts.size > 0) ensTierObs();
-        } else if (waitTm === null && findAnchors(d, true).length > 0) {
+        } else if ((mode === 'on' || waitTm === null) && findAnchors(d, true).length > 0) {
           mountFb();
         }
       };
@@ -1033,46 +1025,41 @@
         healTm = setTimeout(runHeal, wait);
         healTm?.unref?.();
       };
-      if (!seatObs && typeof w.MutationObserver === 'function' && (doc.body || doc.documentElement)) {
+      if (!seatObs && isFn(w.MutationObserver) && (doc.body || doc.documentElement)) {
         seatObs = new w.MutationObserver((recs) => {
           if (mode === 'off' || healTm !== null) return;
           if (Array.isArray(recs) && recs.length > 0) {
+            const ignAll = (l) => { if (l) for (let j = 0; j < l.length; j++) if (!isIgnoredStreamNode(l[j])) return false; return true; };
             let rel = false;
             for (let i = 0; i < recs.length; i++) {
-              if (!isIgnoredStreamNode(recs[i]?.target)) { rel = true; break; }
+              const r = recs[i], a = r?.addedNodes, rm = r?.removedNodes;
+              if (isIgnoredStreamNode(r?.target) || (((a?.length || 0) + (rm?.length || 0)) && ignAll(a) && ignAll(rm))) continue;
+              rel = true; break;
             }
             if (!rel) return;
           }
           const inC = isConv(doc, w);
           let bars = null;
-          const gB = () => bars || (bars = findExtBars(doc));
+          const gB = () => bars || (bars = findExtBars(doc)), visB = (b) => b && b.getAttribute?.(HID_ATTR) !== '1';
           if (!inC) {
-            if (insts.size > 0 || gB().some((b) => b && b.getAttribute?.(HID_ATTR) !== '1')) schedHeal(true);
+            if (insts.size > 0 || gB().some(visB)) schedHeal(true);
             return;
           }
           if (insts.size > 0) {
-            if (anchorsChanged(doc)) {
-              schedHeal(false);
-              return;
-            }
+            if (anchorsChanged(doc)) { schedHeal(false); return; }
           } else if (waitTm === null && !hasExt(gB(), true) && hasAnyAnchor(doc, true)) {
-            schedHeal(true);
-            return;
+            schedHeal(true); return;
           }
-          const extMissingTier = gB().some((b) => b && b.getAttribute?.(HID_ATTR) !== '1' && b.shadowRoot && !b.shadowRoot.querySelector?.(`style[${TIER_STYLE_ATTR}="1"]`));
+          const extMissingTier = gB().some((b) => visB(b) && b.shadowRoot && !b.shadowRoot.querySelector?.(`style[${TIER_STYLE_ATTR}="1"]`));
           let deadExtTier = false;
           for (const anc of extTiers.keys()) { if (!isConn(doc, anc)) { deadExtTier = true; break; } }
-          if (deadExtTier || extMissingTier) {
-            schedHeal(false);
-            return;
-          }
-          if (mode === 'on' && gB().some((b) => b && b.getAttribute?.(FALLBACK_ATTR) !== '1' && b.getAttribute?.(HID_ATTR) !== '1')) {
+          if (deadExtTier || extMissingTier || (mode === 'on' && gB().some((b) => visB(b) && b.getAttribute?.(FALLBACK_ATTR) !== '1'))) {
             schedHeal(false);
           }
         });
         try { seatObs.observe(doc.body || doc.documentElement, { childList: true, subtree: true }); } catch {}
       }
-      if (!popOff && typeof w.addEventListener === 'function') {
+      if (!popOff && isFn(w.addEventListener)) {
         const onPop = () => schedHeal(true);
         w.addEventListener('popstate', onPop);
         popOff = () => w.removeEventListener?.('popstate', onPop);
@@ -1163,9 +1150,8 @@
       if (!node || !doc) return null;
       const direct = instByHost.get(node);
       if (direct && isConn(doc, direct.host)) return direct.host;
-      const cv = node.matches?.('[data-testid="conversation-view"],[data-testid="agent-input-box"],.agy-composer-footer')
-        ? node
-        : node.closest?.('[data-testid="conversation-view"],[data-testid="agent-input-box"],.agy-composer-footer');
+      const cvSel = '[data-testid="conversation-view"],[data-testid="agent-input-box"],.agy-composer-footer';
+      const cv = node.matches?.(cvSel) ? node : node.closest?.(cvSel);
       if (cv) {
         for (const it of insts.values()) {
           if (isConn(doc, it.host) && (cv === it.anc || cv.contains?.(it.anc) || it.anc.contains?.(cv))) return it.host;
@@ -1190,11 +1176,8 @@
     const getSnapshotForBar = (hostOrCid) => {
       if (!hostOrCid) return resolveActiveInst()?.snap || lastSnap;
       if (typeof hostOrCid === 'string') return snapByCid.get(hostOrCid) || lastSnap;
-      const it = instByHost.get(hostOrCid);
-      if (it) return it.snap || (it.cid && snapByCid.get(it.cid)) || lastSnap;
-      const bar = getBarForView(hostOrCid);
-      const it2 = bar && instByHost.get(bar);
-      return it2?.snap || (it2?.cid && snapByCid.get(it2.cid)) || lastSnap;
+      const it = instByHost.get(hostOrCid) || instByHost.get(getBarForView(hostOrCid));
+      return it?.snap || (it?.cid && snapByCid.get(it.cid)) || lastSnap;
     };
 
     const getState = () => {
@@ -1209,9 +1192,9 @@
         mountedFallback: mounted,
         mountedCount,
         waitingForExternal: waitTm !== null,
-        yieldedToExternal: Boolean(mode === 'auto' && (yielded || hasExt())),
+        yieldedToExternal: !!(mode === 'auto' && (yielded || hasExt())),
         hasExternal: hasExt(),
-        pollSuspended: Boolean(mounted && (pollSusp || blurred)),
+        pollSuspended: !!(mounted && (pollSusp || blurred)),
       };
     };
 
@@ -1277,9 +1260,7 @@
       }
       if (waitTm === null) {
         const ms = isFin(cfg?.__fallbackDelayMs) && cfg.__fallbackDelayMs >= 0 ? cfg.__fallbackDelayMs : WAIT_MS;
-        waitTm = setTimeout(() => {
-          waitTimerDone();
-        }, ms);
+        waitTm = setTimeout(waitTimerDone, ms);
         waitTm?.unref?.();
       }
       return getState();

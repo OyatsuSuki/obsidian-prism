@@ -9956,6 +9956,7 @@ export class PrismDaemon {
           sidebarMode,
           hasHostI18n: Boolean(window.__agPrismHostI18n),
           hostI18nMode: String(window.__agPrismHostI18n?.getStatus?.()?.mode || ''),
+          hostI18nCodeHash: String(window.__agPrismHostI18n?.__prismCodeHash || ''),
           hasMascot: Boolean(window.__agDualMascotRig || globalThis.__agDualMascotRig),
           mascotCodeHash: String((window.__agDualMascotRig || globalThis.__agDualMascotRig)?.__prismCodeHash || ''),
           hasHomeStudio: Boolean(window.__agPrismHomeStudioPanel || globalThis.__agPrismHomeStudioPanel || window.__agHomeStudioPanel || globalThis.__agHomeStudioPanel),
@@ -10022,10 +10023,12 @@ export class PrismDaemon {
           : [];
       const needsIsoHostI18nSync =
         uncheckedIsoCtxs.length > 0 || (expectedHostI18nMode !== 'off' && Boolean(entry.isolatedHostI18nPaused));
+      const expectedHostI18nHash = hostI18nEnabled && this.hostI18nExpr ? (/const targetHash = "([^"]+)"/.exec(this.hostI18nExpr)?.[1] || '') : '';
+      const hostI18nHashMismatch = Boolean(expectedHostI18nHash && probe.hostI18nCodeHash && probe.hostI18nCodeHash !== expectedHostI18nHash);
       const needsHostI18nHeal =
         (hostI18nEnabled &&
           !hostI18nSkippedSameSig &&
-          (!probe.hasHostI18n || !entry.hostI18nScriptId || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode))) ||
+          (!probe.hasHostI18n || !entry.hostI18nScriptId || hostI18nHashMismatch || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode))) ||
         (expectedHostI18nMode === 'off' && uncheckedIsoCtxs.length > 0);
       const needsHostI18nCleanup =
         (!hostI18nEnabled && Boolean(probe.hasHostI18n || entry.hostI18nScriptId || entry.hostI18nMounted)) ||
@@ -10247,7 +10250,7 @@ export class PrismDaemon {
             isoHealRes = await this._syncIsolatedHostI18n(entry, true, { skipNoExt: true });
           }
           let evaluatedHostI18nHeal = false;
-          if (!probe.hasHostI18n || !entry.hostI18nScriptId || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode)) {
+          if (!probe.hasHostI18n || !entry.hostI18nScriptId || hostI18nHashMismatch || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode)) {
             if (!this.hostI18nExpr && typeof this.cdp.buildHostI18nExpression === 'function') {
               const chOpts = this._getChannelCacheOpts(true);
               this.hostI18nExpr = chOpts
@@ -10257,7 +10260,11 @@ export class PrismDaemon {
             }
             if (this.hostI18nExpr) {
               const hiSig = this._getHostI18nCfgSig(cfg);
-              if (!entry.hostI18nScriptId) {
+              if (!entry.hostI18nScriptId || hostI18nHashMismatch) {
+                if (entry.hostI18nScriptId) {
+                  await entry.session.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: entry.hostI18nScriptId }).catch(() => {});
+                  entry.hostI18nScriptId = null;
+                }
                 const hiAdd = await entry.session
                   .send('Page.addScriptToEvaluateOnNewDocument', { source: this.hostI18nExpr })
                   .catch(() => null);
@@ -10266,7 +10273,7 @@ export class PrismDaemon {
                   entry.lastHostI18nScriptSig = hiSig;
                 }
               }
-              if (!probe.hasHostI18n || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode)) {
+              if (!probe.hasHostI18n || hostI18nHashMismatch || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode)) {
                 const evalRes = await entry.session.evaluate(this.hostI18nExpr, false, 4500).catch(() => null);
                 if (evalRes?.skippedByLiveCfg) {
                   entry.hostI18nMounted = false;
@@ -10511,7 +10518,7 @@ export class PrismDaemon {
             isoHealRes2 = await this._syncIsolatedHostI18n(entry, true, { skipNoExt: true });
           }
           let evaluatedHostI18nHeal2 = false;
-          if (hostI18nEnabled && !hostI18nSkippedSameSig && (!probe.hasHostI18n || !entry.hostI18nScriptId || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode))) {
+          if (hostI18nEnabled && !hostI18nSkippedSameSig && (!probe.hasHostI18n || !entry.hostI18nScriptId || hostI18nHashMismatch || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode))) {
             if (!this.hostI18nExpr && typeof this.cdp.buildHostI18nExpression === 'function') {
               const chOpts = this._getChannelCacheOpts(true);
               this.hostI18nExpr = chOpts
@@ -10521,7 +10528,11 @@ export class PrismDaemon {
             }
             if (this.hostI18nExpr) {
               const hiSig = this._getHostI18nCfgSig(cfg);
-              if (!entry.hostI18nScriptId) {
+              if (!entry.hostI18nScriptId || hostI18nHashMismatch) {
+                if (entry.hostI18nScriptId) {
+                  await entry.session.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: entry.hostI18nScriptId }).catch(() => {});
+                  entry.hostI18nScriptId = null;
+                }
                 const hiAdd = await entry.session
                   .send('Page.addScriptToEvaluateOnNewDocument', { source: this.hostI18nExpr })
                   .catch(() => null);
@@ -10530,7 +10541,7 @@ export class PrismDaemon {
                   entry.lastHostI18nScriptSig = hiSig;
                 }
               }
-              if (!probe.hasHostI18n || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode)) {
+              if (!probe.hasHostI18n || hostI18nHashMismatch || (probe.hostI18nMode && probe.hostI18nMode !== expectedHostI18nMode)) {
                 const evalRes = await entry.session.evaluate(this.hostI18nExpr, false, 4500).catch(() => null);
                 if (evalRes?.skippedByLiveCfg) {
                   entry.hostI18nMounted = false;
