@@ -294,10 +294,10 @@ test('Obsidian Prism brand compliance, GPL-3.0 LICENSE, NOTICE, CITATION.cff, TH
   assert.ok(noticesTxt.includes(disclaimer));
   assert.ok(readmeTxt.includes(disclaimer));
 
-  const readmeEnTxt = fs.readFileSync(path.join(ROOT_DIR, 'README.en.md'), 'utf8');
+  const readmeEnTxt = fs.readFileSync(path.join(ROOT_DIR, 'docs', 'README.en.md'), 'utf8');
   const settingsPanelTxt = fs.readFileSync(path.join(ROOT_DIR, 'settings-panel.js'), 'utf8');
   const settingsPanelMod = require(path.join(ROOT_DIR, 'settings-panel.js'));
-  const contributorsTxt = fs.readFileSync(path.join(ROOT_DIR, 'CONTRIBUTORS.md'), 'utf8');
+  const contributorsTxt = fs.readFileSync(path.join(ROOT_DIR, 'docs', 'CONTRIBUTORS.md'), 'utf8');
 
   const noticeSlugs = extractGithubRepoSlugs(noticesTxt);
   const readmeSlugs = extractGithubRepoSlugs(readmeTxt);

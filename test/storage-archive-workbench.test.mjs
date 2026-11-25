@@ -696,7 +696,7 @@ test('settings-panel (Ch9): lazy <details> drawer, 3-way mutually exclusive conf
     'sidecars/daemon/conversation-archive.mjs',
     'sidecars/daemon/main.mjs',
     'settings-panel.js',
-    'CONTRIBUTORS.md',
+    'docs/CONTRIBUTORS.md',
     'test/storage-archive-workbench.test.mjs',
   ]) {
     const buf = fs.readFileSync(path.join(ROOT, rel));

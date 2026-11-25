@@ -839,9 +839,9 @@ test('任务 2 & 3: 四端 --purge-data 补齐 obsidian-prism-wallpaper.json（�
   assert.ok(winSetup.includes('"obsidian-prism-wallpaper.json"'), 'Windows Setup --purge-data must include obsidian-prism-wallpaper.json');
   assert.ok(macSetup.includes('"obsidian-prism-wallpaper.json"'), 'macOS Setup --purge-data must include obsidian-prism-wallpaper.json');
 
-  // 3) README.md & README.en.md AI 代装规范与思考翻译自检核验
+  // 3) README.md & docs/README.en.md AI 代装规范与思考翻译自检核验
   const readmeZh = fs.readFileSync(path.join(ROOT_DIR, 'README.md'), 'utf8');
-  const readmeEn = fs.readFileSync(path.join(ROOT_DIR, 'README.en.md'), 'utf8');
+  const readmeEn = fs.readFileSync(path.join(ROOT_DIR, 'docs', 'README.en.md'), 'utf8');
   assert.ok(readmeZh.includes('npm run install:plugin') && readmeZh.includes('node tools/install-plugin.cjs --status'));
   assert.ok(readmeZh.includes('严禁仅执行 `npm run inject`'));
   assert.ok(readmeZh.includes('一键诊断'));

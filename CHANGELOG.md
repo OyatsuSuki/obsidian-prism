@@ -38,7 +38,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Acknowledgements / 社区致谢（Community Credits）
 
-- 衷心感谢推动 `v1.0.8-beta.2` 落地的社区贡献者与验票伙伴（已同步收录至 [`CONTRIBUTORS.md`](./CONTRIBUTORS.md) 并保留 `Co-authored-by` 署名）：
+- 衷心感谢推动 `v1.0.8-beta.2` 落地的社区贡献者与验票伙伴（已同步收录至 [`docs/CONTRIBUTORS.md`](./docs/CONTRIBUTORS.md) 并保留 `Co-authored-by` 署名）：
   - **代码贡献（PR）**：**[@OyatsuSuki](https://github.com/OyatsuSuki)**（[PR #60](https://github.com/RMvdesi/obsidian-prism/pull/60) · [PR #61](https://github.com/RMvdesi/obsidian-prism/pull/61)）。
   - **问题定位与实测验证**：**[@IASUI](https://github.com/IASUI)**（[#62](https://github.com/RMvdesi/obsidian-prism/issues/62)）、**[@VehideX](https://github.com/VehideX)**（[#63](https://github.com/RMvdesi/obsidian-prism/issues/63)）、**[@water707](https://github.com/water707)**（[#64](https://github.com/RMvdesi/obsidian-prism/issues/64)）、**[@yuaniyuan](https://github.com/yuaniyuan)**（[#59](https://github.com/RMvdesi/obsidian-prism/issues/59)）、**[@Xinbeok](https://github.com/Xinbeok)**（PR #60 macOS 验证）。
   - *Special thanks to [@OyatsuSuki](https://github.com/OyatsuSuki) (PR #60/#61), [@IASUI](https://github.com/IASUI) (#62), [@VehideX](https://github.com/VehideX) (#63), [@water707](https://github.com/water707) (#64), [@yuaniyuan](https://github.com/yuaniyuan) (#59), and [@Xinbeok](https://github.com/Xinbeok) (PR #60 macOS verification).*
@@ -102,7 +102,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Acknowledgements / 社区致谢（Community Credits）
 
-- 衷心感谢通过 PR、兼容性排查与细致复现推动 `v1.0.8-beta.1` 落地的各位社区贡献者（全部 PR 贡献者均已保留 `Co-authored-by` 署名并收录于 [`CONTRIBUTORS.md`](./CONTRIBUTORS.md)）：
+- 衷心感谢通过 PR、兼容性排查与细致复现推动 `v1.0.8-beta.1` 落地的各位社区贡献者（全部 PR 贡献者均已保留 `Co-authored-by` 署名并收录于 [`docs/CONTRIBUTORS.md`](./docs/CONTRIBUTORS.md)）：
   - **代码贡献（PR）**：**[@tone-leh](https://github.com/tone-leh)**（PR #53 / #54 / #55 / #56 & #52）、**[@OyatsuSuki](https://github.com/OyatsuSuki)**（PR #41 / #43 / #48 & #40 / #47）、**[@Gruu6y](https://github.com/Gruu6y)**（PR #45 & #18）、**[@yzd05](https://github.com/yzd05)**（PR #42）、**[@hukun01](https://github.com/hukun01)**（PR #49 / #50）、**[@zmzwynzj](https://github.com/zmzwynzj)**（PR #51）。
   - **问题定位与社区反馈**：**[@wanghaoyi216](https://github.com/wanghaoyi216)**（#44）、**[@legegeCoder](https://github.com/legegeCoder)**（#57）、**[@IASUI](https://github.com/IASUI)**（#58）。
   - *Special thanks to all PR authors and issue reporters who contributed to `v1.0.8-beta.1`: [@tone-leh](https://github.com/tone-leh), [@OyatsuSuki](https://github.com/OyatsuSuki), [@Gruu6y](https://github.com/Gruu6y), [@yzd05](https://github.com/yzd05), [@hukun01](https://github.com/hukun01), [@zmzwynzj](https://github.com/zmzwynzj), [@wanghaoyi216](https://github.com/wanghaoyi216), [@legegeCoder](https://github.com/legegeCoder), and [@IASUI](https://github.com/IASUI).*
@@ -173,7 +173,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Acknowledgements / 社区致谢（Community Credits）
 
-- 衷心感谢通过 PR、深度根因分析、复现视频与细心建议推动 `v1.0.7` 正式版落地的每一位社区伙伴（PR 贡献者均已保留 `Co-authored-by` 署名并永久收录于 [`CONTRIBUTORS.md`](./CONTRIBUTORS.md)）：
+- 衷心感谢通过 PR、深度根因分析、复现视频与细心建议推动 `v1.0.7` 正式版落地的每一位社区伙伴（PR 贡献者均已保留 `Co-authored-by` 署名并永久收录于 [`docs/CONTRIBUTORS.md`](./docs/CONTRIBUTORS.md)）：
   - **代码贡献（PR）**：**[@yzd05](https://github.com/yzd05)**（PR #10 / #13 / #20 / #21 / #22 / #23 / #29）、**[@zzirui321-rgb](https://github.com/zzirui321-rgb)**（PR #30 / #33 / #35 & #28 / #32 / #34 / #36）、**[@Kazaorus](https://github.com/Kazaorus)**（PR #19）、**[@DDykarc](https://github.com/DDykarc)**（PR #12）、**[@SuzumiyaHaruhi719](https://github.com/SuzumiyaHaruhi719)**（PR #17）。
   - **问题定位与社区反馈**：**[@boy14204367](https://github.com/boy14204367)**（#9 / #11 / #14 / #15）、**[@nanpi8633-spec](https://github.com/nanpi8633-spec)**（#38）、**[@yanzhem02](https://github.com/yanzhem02)**（#37）、**[@awasllll0317](https://github.com/awasllll0317)**（#39）、**[@baihao2006](https://github.com/baihao2006)**（#31）、**[@fenzsen](https://github.com/fenzsen)**（#27）、**[@L-yifan](https://github.com/L-yifan)**（#26）、**[@Gruu6y](https://github.com/Gruu6y)**（#18）、**[@Freezecatmeow](https://github.com/Freezecatmeow)**（#16）。
   - *Special thanks to all PR authors and issue reporters who shaped `v1.0.7`: [@yzd05](https://github.com/yzd05), [@zzirui321-rgb](https://github.com/zzirui321-rgb), [@Kazaorus](https://github.com/Kazaorus), [@DDykarc](https://github.com/DDykarc), [@SuzumiyaHaruhi719](https://github.com/SuzumiyaHaruhi719), [@boy14204367](https://github.com/boy14204367), [@nanpi8633-spec](https://github.com/nanpi8633-spec), [@yanzhem02](https://github.com/yanzhem02), [@awasllll0317](https://github.com/awasllll0317), [@baihao2006](https://github.com/baihao2006), [@fenzsen](https://github.com/fenzsen), [@L-yifan](https://github.com/L-yifan), [@Gruu6y](https://github.com/Gruu6y), and [@Freezecatmeow](https://github.com/Freezecatmeow).*

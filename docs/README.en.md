@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo.svg" width="96" height="96" alt="Obsidian Prism Logo" />
+<img src="../assets/logo.svg" width="96" height="96" alt="Obsidian Prism Logo" />
 
 # Obsidian Prism
 
@@ -8,21 +8,21 @@
 
 Four dark & daylight themes · A living 512K context vial · Reasoning effort slider · Pixel companions · Custom Static / Video Wallpaper (Beta) · Chat Mode (Beta)
 
-[**简体中文**](./README.md) · [**English**](./README.en.md) · [**Changelog**](./CHANGELOG.md) · [**Releases**](https://github.com/RMvdesi/obsidian-prism/releases) · [**Issues**](https://github.com/RMvdesi/obsidian-prism/issues)
+[**简体中文**](../README.md) · [**English**](./README.en.md) · [**Changelog**](../CHANGELOG.md) · [**Releases**](https://github.com/RMvdesi/obsidian-prism/releases) · [**Issues**](https://github.com/RMvdesi/obsidian-prism/issues)
 
 <p>
   <a href="https://github.com/RMvdesi/obsidian-prism/releases"><img src="https://img.shields.io/github/v/release/RMvdesi/obsidian-prism?style=flat-square&color=3186ff&label=Release" alt="Latest Release" /></a>
   <img src="https://img.shields.io/badge/Version-1.0.8--beta.1-0f172a?style=flat-square" alt="Version 1.0.8-beta.2" />
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20Universal-1e293b?style=flat-square" alt="Platform" />
   <a href="https://github.com/RMvdesi/obsidian-prism/actions"><img src="https://img.shields.io/github/actions/workflow/status/RMvdesi/obsidian-prism/ci.yml?branch=main&style=flat-square&label=CI" alt="CI Status" /></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-2563eb?style=flat-square" alt="License: GPL-3.0" /></a>
-  <a href="./NOTICE"><img src="https://img.shields.io/badge/Attribution-Required%20(NOTICE)-8b5cf6?style=flat-square" alt="Attribution Required" /></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-2563eb?style=flat-square" alt="License: GPL-3.0" /></a>
+  <a href="../NOTICE"><img src="https://img.shields.io/badge/Attribution-Required%20(NOTICE)-8b5cf6?style=flat-square" alt="Attribution Required" /></a>
 </p>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/hero-dark.webp" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/screenshots/hero-light.webp" />
-  <img src="assets/screenshots/hero-dark.webp" width="100%" alt="Obsidian Prism v1.0.8-beta.2 showcase" />
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/screenshots/hero-dark.webp" />
+  <source media="(prefers-color-scheme: light)" srcset="../assets/screenshots/hero-light.webp" />
+  <img src="../assets/screenshots/hero-dark.webp" width="100%" alt="Obsidian Prism v1.0.8-beta.2 showcase" />
 </picture>
 
 <sub>Footage is rendered frame by frame by an offline stage that runs this repository's front-end source directly. All workspaces and conversations shown are fictional.</sub>
@@ -55,7 +55,7 @@ Four dark & daylight themes · A living 512K context vial · Reasoning effort sl
 ### 1. Four Themes
 
 <p align="center">
-  <img src="assets/screenshots/palettes.webp" width="100%" alt="Four dark and daylight themes" />
+  <img src="../assets/screenshots/palettes.webp" width="100%" alt="Four dark and daylight themes" />
 </p>
 
 | Theme Preset | Config Key | Sidebar | Canvas | Notes |
@@ -70,7 +70,7 @@ Four dark & daylight themes · A living 512K context vial · Reasoning effort sl
 Click the vial to open the usage popover with context slices, 5-hour quota and model-pool headroom. The effort slider lights up its starfield as you climb tiers, and Orchestrator appears as a cut-crystal bar.
 
 <p align="center">
-  <img src="assets/screenshots/optics.webp" width="100%" alt="512K context vial, reasoning effort slider and Orchestrator cut crystal" />
+  <img src="../assets/screenshots/optics.webp" width="100%" alt="512K context vial, reasoning effort slider and Orchestrator cut crystal" />
 </p>
 
 ### 3. Pixel Companions
@@ -78,7 +78,7 @@ Click the vial to open the usage popover with context slices, 5-hour quota and m
 Drag the companions above the composer and stack them five high; under the right conditions the purple cat dons a rainbow aurora cape. They doze off when idle and can be turned off in settings.
 
 <p align="center">
-  <img src="assets/screenshots/companions.webp" width="100%" alt="Pixel companions tower and rainbow easter egg" />
+  <img src="../assets/screenshots/companions.webp" width="100%" alt="Pixel companions tower and rainbow easter egg" />
 </p>
 
 ### 4. Chat Mode (Beta)
@@ -86,7 +86,7 @@ Drag the companions above the composer and stack them five high; under the right
 Off by default — enable it under **Settings → Appearance → Beta**. A switcher at the top of the sidebar flips between Code and Chat, with folders for everyday conversations and project-scoped permissions that never touch global Code settings.
 
 <p align="center">
-  <img src="assets/screenshots/chat-mode.webp" width="100%" alt="Chat Mode (Beta)" />
+  <img src="../assets/screenshots/chat-mode.webp" width="100%" alt="Chat Mode (Beta)" />
 </p>
 
 ### 5. More Capabilities
@@ -215,11 +215,11 @@ obsidian-prism/
 ## License, Derivative Rules & Citation
 
 ### 1. Open-Source License & Mandatory Attribution (`GPL-3.0-only` + `NOTICE`)
-**Obsidian Prism** (`Copyright (C) 2026 RMvdesi`) is licensed under the **[GNU General Public License v3.0 (`GPL-3.0-only`)](./LICENSE)** with mandatory Section 7 attribution terms in **[`NOTICE`](./NOTICE)**.
+**Obsidian Prism** (`Copyright (C) 2026 RMvdesi`) is licensed under the **[GNU General Public License v3.0 (`GPL-3.0-only`)](../LICENSE)** with mandatory Section 7 attribution terms in **[`NOTICE`](../NOTICE)**.
 
 Any fork, modification, port, or redistribution must comply with all three requirements:
 1. **Same-License Copyleft**: Any derivative plugin, theme bundle, or installer incorporating code from Obsidian Prism must be distributed under **`GPL-3.0`** with complete corresponding source code disclosed. Proprietary bundling, obfuscation lock-in, or closed-source commercial resale is prohibited.
-2. **Preserve Attribution Chain**: Retain [`LICENSE`](./LICENSE), [`NOTICE`](./NOTICE), and [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) intact, and keep visible credit linking back to `@RMvdesi` and `RMvdesi/obsidian-prism` in your README and settings UI.
+2. **Preserve Attribution Chain**: Retain [`LICENSE`](../LICENSE), [`NOTICE`](../NOTICE), and [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) intact, and keep visible credit linking back to `@RMvdesi` and `RMvdesi/obsidian-prism` in your README and settings UI.
 3. **Mark Modifications & Non-Endorsement**: Document modification dates and summaries in altered files, and do not distribute modified forks under the unmodified `Obsidian Prism` name as official releases without written permission.
 
 #### Downstream Attribution Snippet
@@ -243,7 +243,7 @@ Any fork, modification, port, or redistribution must comply with all three requi
 
 ### 2. Upstream Open-Source Credits
 
-Absorbed and adapted third-party components were originally released under the **MIT License** (compatible with `GPL-3.0-only`), with full copyright and permission notices preserved in [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md):
+Absorbed and adapted third-party components were originally released under the **MIT License** (compatible with `GPL-3.0-only`), with full copyright and permission notices preserved in [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md):
 
 1. **[0DNANCY/agy-claude-style](https://github.com/0DNANCY/agy-claude-style)** — `MIT License`, `Copyright (c) 2026 0DNANCY` (Base palette tokens, spring physics foundation, WebGL2 horizon/glyph wavefield, pixel mascot foundation, and initial bundler).
 2. **[ATtacK030130/antigrative-dashboard](https://github.com/ATtacK030130/antigrative-dashboard)** (`v0.9.1`) — `MIT License`, `Copyright (c) 2026 AG Pulse contributors` (Absorbed and adapted in `vendor/pulse-dashboard/` for live token throughput, cache hit rate, 5h/weekly quota forecasting, main/subagent token attribution, and CDP process-lineage discovery).
@@ -261,5 +261,5 @@ Absorbed and adapted third-party components were originally released under the *
 
 Heartfelt thanks to every community contributor whose Pull Requests, security hardening, performance profiling, and bug reports help shape Obsidian Prism!
 
-- **Full Hall of Contributors & Detailed Credits**: See [**`CONTRIBUTORS.md`**](./CONTRIBUTORS.md) (permanently crediting all PR authors and key issue reporters, alongside release notes in [`CHANGELOG.md`](./CHANGELOG.md)).
+- **Full Hall of Contributors & Detailed Credits**: See [**`CONTRIBUTORS.md`**](./CONTRIBUTORS.md) (permanently crediting all PR authors and key issue reporters, alongside release notes in [`CHANGELOG.md`](../CHANGELOG.md)).
 - Contributions via [Issues](https://github.com/RMvdesi/obsidian-prism/issues) and [Pull Requests](https://github.com/RMvdesi/obsidian-prism/pulls) are always welcome!

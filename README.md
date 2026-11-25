@@ -8,7 +8,7 @@
 
 四套深浅配色 · 会呼吸的 512K 上下文试管 · 推理等级滑块 · 像素伙伴 · 自定义动静态壁纸（Beta）· Chat 对话模式（Beta）
 
-[**简体中文**](./README.md) · [**English**](./README.en.md) · [**更新日志 (CHANGELOG)**](./CHANGELOG.md) · [**下载安装包 (Releases)**](https://github.com/RMvdesi/obsidian-prism/releases) · [**问题反馈 (Issues)**](https://github.com/RMvdesi/obsidian-prism/issues)
+[**简体中文**](./README.md) · [**English**](./docs/README.en.md) · [**更新日志 (CHANGELOG)**](./CHANGELOG.md) · [**下载安装包 (Releases)**](https://github.com/RMvdesi/obsidian-prism/releases) · [**问题反馈 (Issues)**](https://github.com/RMvdesi/obsidian-prism/issues)
 
 <p>
   <a href="https://github.com/RMvdesi/obsidian-prism/releases"><img src="https://img.shields.io/github/v/release/RMvdesi/obsidian-prism?style=flat-square&color=3186ff&label=Release" alt="Latest Release" /></a>
@@ -261,5 +261,5 @@ obsidian-prism/
 
 衷心感谢所有通过 Pull Request、安全加固、性能剖析与一线缺陷定位推动 Obsidian Prism 持续演进的社区伙伴！
 
-- **完整社区贡献者荣誉名录与贡献详情**：请见 [**`CONTRIBUTORS.md`**](./CONTRIBUTORS.md)（永久收录全部 PR 贡献者与核心 Issue 定位反馈者，并同步留档于 [`CHANGELOG.md`](./CHANGELOG.md)）。
+- **完整社区贡献者荣誉名录与贡献详情**：请见 [**`docs/CONTRIBUTORS.md`**](./docs/CONTRIBUTORS.md)（永久收录全部 PR 贡献者与核心 Issue 定位反馈者，并同步留档于 [`CHANGELOG.md`](./CHANGELOG.md)）。
 - 欢迎通过 [Issues](https://github.com/RMvdesi/obsidian-prism/issues) 与 [Pull Requests](https://github.com/RMvdesi/obsidian-prism/pulls) 一起参与打磨！

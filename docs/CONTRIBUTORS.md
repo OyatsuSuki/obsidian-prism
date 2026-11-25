@@ -53,6 +53,6 @@
 
 ## How to Contribute / 参与贡献
 
-欢迎通过 [Issues](https://github.com/RMvdesi/obsidian-prism/issues) 提交缺陷复现、性能分析与新点子，或提交 [Pull Requests](https://github.com/RMvdesi/obsidian-prism/pulls) 参与改进；每个版本的详细社区致谢也会同步记录在 [`CHANGELOG.md`](./CHANGELOG.md) 中。
+欢迎通过 [Issues](https://github.com/RMvdesi/obsidian-prism/issues) 提交缺陷复现、性能分析与新点子，或提交 [Pull Requests](https://github.com/RMvdesi/obsidian-prism/pulls) 参与改进；每个版本的详细社区致谢也会同步记录在 [`CHANGELOG.md`](../CHANGELOG.md) 中。
 
-*Issues, performance profiles, UX suggestions, and Pull Requests are always welcome — every accepted contribution is credited here and in [`CHANGELOG.md`](./CHANGELOG.md).*
+*Issues, performance profiles, UX suggestions, and Pull Requests are always welcome — every accepted contribution is credited here and in [`CHANGELOG.md`](../CHANGELOG.md).*
