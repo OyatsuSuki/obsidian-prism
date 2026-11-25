@@ -2399,8 +2399,9 @@ async function executeHostRelaunchSequence(task, hooks = {}) {
 }
 
 const WIN_DETACHED_RELAUNCH_PS = [
+  'param([string]$TaskFile)',
   '$ErrorActionPreference = "SilentlyContinue"',
-  '$taskFile = [string]$env:AG_PRISM_RELAUNCH_TASK_FILE',
+  '$taskFile = if ($TaskFile) { $TaskFile } else { [string]$env:AG_PRISM_RELAUNCH_TASK_FILE }',
   'if (-not $taskFile -or -not (Test-Path -LiteralPath $taskFile -PathType Leaf)) { exit 0 }',
   '$task = Get-Content -LiteralPath $taskFile -Raw -Encoding UTF8 | ConvertFrom-Json',
   'Remove-Item -LiteralPath $taskFile -Force -ErrorAction SilentlyContinue',
@@ -2410,6 +2411,26 @@ const WIN_DETACHED_RELAUNCH_PS = [
   '  $exePath = Join-Path $env:LOCALAPPDATA "Programs\\antigravity\\Antigravity.exe"',
   '}',
   'if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) { exit 0 }',
+  'function Test-SafeAppStorageFile([string]$p) {',
+  '  if (-not $p -or -not (Test-Path -LiteralPath $p -PathType Leaf)) { return $false }',
+  '  $item = Get-Item -LiteralPath $p -Force -ErrorAction SilentlyContinue',
+  '  if (-not $item) { return $false }',
+  '  if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { return $false }',
+  '  if ($item.Length -gt 8388608) { return $false }',
+  '  $parent = Split-Path -Parent $p',
+  '  if ($parent) {',
+  '    $pItem = Get-Item -LiteralPath $parent -Force -ErrorAction SilentlyContinue',
+  '    if ($pItem -and (($pItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)) { return $false }',
+  '  }',
+  '  return $true',
+  '}',
+  'function Write-JsonAtomicUtf8([string]$p, $obj) {',
+  '  $json = ($obj | ConvertTo-Json -Depth 16) + "`n"',
+  '  $tmp = "$p.$PID.tmp"',
+  '  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)',
+  '  [System.IO.File]::WriteAllText($tmp, $json, $utf8NoBom)',
+  '  Move-Item -LiteralPath $tmp -Destination $p -Force',
+  '}',
   'function Test-MainHostAlive {',
   '  $ps = @(Get-Process -Name "Antigravity" -ErrorAction SilentlyContinue)',
   '  if ($ps.Count -eq 0) { return $false }',
@@ -2422,18 +2443,59 @@ const WIN_DETACHED_RELAUNCH_PS = [
   '  }',
   '  return $false',
   '}',
-  'foreach ($p in @(Get-Process -Name "Antigravity" -ErrorAction SilentlyContinue)) {',
-  '  if ($p.MainWindowHandle -ne 0) { $null = $p.CloseMainWindow() }',
+  '$appStoragePath = [string]$task.appStoragePath',
+  'if (-not $appStoragePath -and $env:APPDATA) {',
+  '  $appStoragePath = Join-Path $env:APPDATA "Antigravity\\app_storage.json"',
+  '}',
+  '$suspendedRunInBg = $false',
+  '$bgSnapshot = $null',
+  'if (Test-SafeAppStorageFile $appStoragePath) {',
+  '  try {',
+  '    $rawBg = Get-Content -LiteralPath $appStoragePath -Raw -Encoding UTF8',
+  '    if ($rawBg -and $rawBg.Trim()) {',
+  '      $parsedBg = $rawBg | ConvertFrom-Json',
+  '      if ($parsedBg -and ($parsedBg.runInBackground -eq "true")) {',
+  '        $bgSnapshot = $parsedBg',
+  '        $parsedBg.runInBackground = "false"',
+  '        Write-JsonAtomicUtf8 $appStoragePath $parsedBg',
+  '        $suspendedRunInBg = $true',
+  '      }',
+  '    }',
+  '  } catch {}',
   '}',
   '$exited = $false',
-  'for ($i = 0; $i -lt 100; $i++) {',
-  '  if (-not (Test-MainHostAlive)) { $exited = $true; break }',
-  '  if ($i -eq 12) {',
-  '    foreach ($p in @(Get-Process -Name "Antigravity" -ErrorAction SilentlyContinue)) {',
-  '      if ($p.MainWindowHandle -ne 0) { $null = $p.CloseMainWindow() }',
-  '    }',
+  'try {',
+  '  foreach ($p in @(Get-Process -Name "Antigravity" -ErrorAction SilentlyContinue)) {',
+  '    if ($p.MainWindowHandle -ne 0) { $null = $p.CloseMainWindow() }',
   '  }',
-  '  Start-Sleep -Milliseconds 250',
+  '  for ($i = 0; $i -lt 100; $i++) {',
+  '    if (-not (Test-MainHostAlive)) { $exited = $true; break }',
+  '    if ($i -eq 12) {',
+  '      foreach ($p in @(Get-Process -Name "Antigravity" -ErrorAction SilentlyContinue)) {',
+  '        if ($p.MainWindowHandle -ne 0) { $null = $p.CloseMainWindow() }',
+  '      }',
+  '    }',
+  '    Start-Sleep -Milliseconds 250',
+  '  }',
+  '} finally {',
+  '  if ($suspendedRunInBg -and $appStoragePath) {',
+  '    try {',
+  '      $restoreObj = $bgSnapshot',
+  '      if (Test-SafeAppStorageFile $appStoragePath) {',
+  '        try {',
+  '          $latestRaw = Get-Content -LiteralPath $appStoragePath -Raw -Encoding UTF8',
+  '          if ($latestRaw -and $latestRaw.Trim()) {',
+  '            $latestObj = $latestRaw | ConvertFrom-Json',
+  '            if ($latestObj) { $restoreObj = $latestObj }',
+  '          }',
+  '        } catch {}',
+  '      }',
+  '      if ($restoreObj) {',
+  '        $restoreObj.runInBackground = "true"',
+  '        Write-JsonAtomicUtf8 $appStoragePath $restoreObj',
+  '      }',
+  '    } catch {}',
+  '  }',
   '}',
   'if (-not $exited) { exit 0 }',
   'Start-Sleep -Milliseconds 350',
@@ -2441,17 +2503,46 @@ const WIN_DETACHED_RELAUNCH_PS = [
   'Start-Process -FilePath $exePath -ArgumentList "--remote-debugging-port=0" -WorkingDirectory $workDir | Out-Null',
 ].join('\n');
 
-const WIN_DETACHED_RELAUNCH_B64 = Buffer.from(WIN_DETACHED_RELAUNCH_PS, 'utf16le').toString('base64');
-
 const WIN_WMI_BREAKAWAY_PS = [
   '$ErrorActionPreference = "Stop"',
-  '$cmd = "powershell.exe -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand " + $env:AG_PRISM_HELPER_B64',
+  '$cmd = [string]$env:AG_PRISM_WMI_CMD',
+  'if (-not $cmd) { exit 1 }',
+  '$cwd = [string]$env:AG_PRISM_WMI_CWD',
   '$psi = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly -Property @{ ShowWindow = [uint16]0 }',
-  '$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $cmd; ProcessStartupInformation = $psi }',
+  '$argsMap = @{ CommandLine = $cmd; ProcessStartupInformation = $psi }',
+  'if ($cwd) { $argsMap.CurrentDirectory = $cwd }',
+  '$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments $argsMap',
   'if ($r -and $r.ReturnValue -eq 0 -and $r.ProcessId) { Write-Output $r.ProcessId }',
 ].join('\n');
 
 const WIN_WMI_BREAKAWAY_B64 = Buffer.from(WIN_WMI_BREAKAWAY_PS, 'utf16le').toString('base64');
+
+function assertSafeWinHelperPath(rawPath, label = 'path') {
+  const s = String(rawPath || '').trim();
+  if (!s) throw new Error(`Invalid empty ${label}`);
+  if (/[;&|`$<>^%!"\r\n\0]/.test(s)) {
+    throw new Error(`Unsafe characters in ${label}: ${s}`);
+  }
+  return s;
+}
+
+function buildWinWmiRelaunchCommand({ helperScriptPath, taskFile } = {}) {
+  const safeScript = assertSafeWinHelperPath(helperScriptPath, 'helperScriptPath');
+  const safeTask = assertSafeWinHelperPath(taskFile, 'taskFile');
+  return [
+    'powershell.exe',
+    '-NoProfile',
+    '-NonInteractive',
+    '-WindowStyle',
+    'Hidden',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    `"${safeScript}"`,
+    '-TaskFile',
+    `"${safeTask}"`,
+  ].join(' ');
+}
 
 function normalizeMacAppBundlePath(rawPath) {
   const s = String(rawPath || '').trim();
@@ -2564,24 +2655,33 @@ function spawnDetachedHostRelaunchHelper(task, opts = {}) {
   const effectivePlatform = opts.platformOverride || process.platform;
   const spawnFn = typeof opts.spawnFn === 'function' ? opts.spawnFn : spawn;
   if (effectivePlatform === 'win32') {
-    const privateStateDir = path.join(os.homedir(), '.gemini', 'config', 'plugins', 'obsidian-prism');
+    const privateStateDir = opts.privateStateDir
+      ? path.resolve(String(opts.privateStateDir))
+      : path.join(os.homedir(), '.gemini', 'config', 'plugins', 'obsidian-prism');
     fs.mkdirSync(privateStateDir, { recursive: true });
     const privateTaskFile = path.join(privateStateDir, '.relaunch-task.json');
+    const privateHelperFile = path.join(privateStateDir, '.relaunch-helper.ps1');
     const resolvedExe =
       task.exePath ||
       path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'Programs', 'antigravity', 'Antigravity.exe');
+    const taskPayload = { hostPid, exePath: resolvedExe };
+    if (task.appStoragePath) {
+      taskPayload.appStoragePath = String(task.appStoragePath);
+    }
     const tmpTaskFile = `${privateTaskFile}.${process.pid}.tmp`;
-    fs.writeFileSync(
-      tmpTaskFile,
-      JSON.stringify({ hostPid, exePath: resolvedExe }, null, 2) + '\n',
-      { encoding: 'utf8', mode: 0o600 }
-    );
+    fs.writeFileSync(tmpTaskFile, JSON.stringify(taskPayload, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
     fs.renameSync(tmpTaskFile, privateTaskFile);
+    const tmpHelperFile = `${privateHelperFile}.${process.pid}.tmp`;
+    fs.writeFileSync(tmpHelperFile, WIN_DETACHED_RELAUNCH_PS + '\n', { encoding: 'utf8', mode: 0o600 });
+    fs.renameSync(tmpHelperFile, privateHelperFile);
     if (!opts.disableWmiBreakaway) {
       try {
-        const wmiRunnerPs = `$env:AG_PRISM_RELAUNCH_TASK_FILE = [System.IO.Path]::Combine($env:USERPROFILE, '.gemini', 'config', 'plugins', 'obsidian-prism', '.relaunch-task.json'); powershell.exe -NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand ${WIN_DETACHED_RELAUNCH_B64}`;
-        const wmiRunnerB64 = Buffer.from(wmiRunnerPs, 'utf16le').toString('base64');
-        const out = execFileSync(
+        const wmiCmd = buildWinWmiRelaunchCommand({
+          helperScriptPath: privateHelperFile,
+          taskFile: privateTaskFile,
+        });
+        const wmiExec = typeof opts.wmiExecSync === 'function' ? opts.wmiExecSync : execFileSync;
+        const out = wmiExec(
           'powershell.exe',
           ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-EncodedCommand', WIN_WMI_BREAKAWAY_B64],
           {
@@ -2589,7 +2689,7 @@ function spawnDetachedHostRelaunchHelper(task, opts = {}) {
             windowsHide: true,
             timeout: 6000,
             stdio: ['ignore', 'pipe', 'ignore'],
-            env: { ...process.env, AG_PRISM_HELPER_B64: wmiRunnerB64 },
+            env: { ...process.env, AG_PRISM_WMI_CMD: wmiCmd, AG_PRISM_WMI_CWD: os.tmpdir() },
           }
         );
         const helperPid = parseInt(String(out || '').trim().split(/\s+/).pop(), 10);
@@ -2600,11 +2700,23 @@ function spawnDetachedHostRelaunchHelper(task, opts = {}) {
     }
     const child = spawnFn(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-EncodedCommand', WIN_DETACHED_RELAUNCH_B64],
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-WindowStyle',
+        'Hidden',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        privateHelperFile,
+        '-TaskFile',
+        privateTaskFile,
+      ],
       {
         detached: true,
         stdio: 'ignore',
         windowsHide: true,
+        cwd: os.tmpdir(),
         env: { ...process.env, AG_PRISM_RELAUNCH_TASK_FILE: privateTaskFile },
       }
     );
@@ -11466,6 +11578,8 @@ module.exports = {
   promptUserForHostRelaunch,
   executeHostRelaunchSequence,
   normalizeMacAppBundlePath,
+  WIN_DETACHED_RELAUNCH_PS,
+  buildWinWmiRelaunchCommand,
   MAC_DETACHED_RELAUNCH_SH,
   LINUX_DETACHED_RELAUNCH_SH,
   spawnDetachedHostRelaunchHelper,
