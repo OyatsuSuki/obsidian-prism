@@ -77,6 +77,8 @@
     'model-selector-list': 1,
     'model-selector-orchestrator': 1,
     'orchestrator-effort-bar': 1,
+    'orchestrator-picker-row': 1,
+    'orchestrator-picker-effort': 1,
   };
 
   var PRISM_OWNED_IDS = {
@@ -275,7 +277,7 @@
     if (!el || el.nodeType !== 1) return false;
     var tid = preTid !== undefined ? preTid : getAttr(el, 'data-testid');
     if (tid && hasOwn.call(MODEL_SELECTOR_TESTIDS, tid)) return true;
-    if (hasAttr(el, 'data-effort') || hasAttr(el, 'data-ag-cs-model-submenu')) return true;
+    if (hasAttr(el, 'data-effort') || hasAttr(el, 'data-ag-cs-model-submenu') || hasAttr(el, 'data-ag-cs-orch-l2') || hasAttr(el, 'data-ag-cs-orch-l3') || hasAttr(el, 'data-ces-orch-row')) return true;
     return false;
   }
 
