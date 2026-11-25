@@ -913,6 +913,7 @@
       }
       if (!selRow) return { e: false, i: -1, cid: '', r: null, rn: false, s: null, l: null, t: 0, st: states };
       const curCid = getSidebarRowCid(selRow);
+      if (sbInit && sbRect && (curCid && sbCid ? curCid === sbCid : selIdx === sbIndex)) return { e: false, i: selIdx, cid: curCid, r: selRow, rn: selRun, s: sbRect, st: states };
       const list = peOf(selRow);
       const rr = rectOf(selRow);
       const lr = rectOf(list);

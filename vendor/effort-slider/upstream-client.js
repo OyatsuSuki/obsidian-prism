@@ -651,46 +651,43 @@ if (triggerEl !== undefined) prev.trigger = triggerEl;
 if (paneEl !== undefined) prev.pane = paneEl;
 _lastTrigStateByDoc.set(doc, prev);
 }
+function _mainTrigs(sc) {
+var l = sc?.querySelectorAll?.(_AG_TRIG_SEL), o = [];
+if (l) for (var i = 0; i < l.length; i++) if (l[i] && !_isSubTrigger(l[i])) o.push(l[i]);
+return o;
+}
 function _findTriggerInNode(scope) {
 if (!scope) return null;
-if (scope.matches && scope.matches(_AG_TRIG_SEL) && !_isSubTrigger(scope) && scope.isConnected !== false) return scope;
+if (scope.matches?.(_AG_TRIG_SEL) && !_isSubTrigger(scope) && scope.isConnected !== false) return scope;
 if (scope.querySelectorAll) {
-var ls = scope.querySelectorAll(_AG_TRIG_SEL), fb = null;
-for (var i = 0; i < ls.length; i += 1) {
-var el = ls[i];
-if (!el || _isSubTrigger(el)) continue;
-if (_isTrigVisible(el)) return el;
-if (!fb) fb = el;
+var cs = _mainTrigs(scope), fb = null;
+if (cs.length <= 1) return cs[0] || null;
+for (var j = 0; j < cs.length; j++) {
+if (_isTrigVisible(cs[j])) return cs[j];
+if (!fb) fb = cs[j];
 }
 return fb;
 }
-var q = scope.querySelector && scope.querySelector(_AG_TRIG_SEL);
+var q = scope.querySelector?.(_AG_TRIG_SEL);
 return q && !_isSubTrigger(q) ? q : null;
 }
 function findAntigravityTrigger(doc, hintEl) {
 var d = doc || (typeof document !== "undefined" ? document : null);
 if (!d) return null;
 if (hintEl && hintEl.isConnected !== false) {
-var hDirect = _findTriggerInNode(hintEl);
-if (hDirect) return hDirect;
-var hPane = hintEl.closest && hintEl.closest(_AG_PANE_SEL);
-if (hPane) {
-var hPaneHit = _findTriggerInNode(hPane);
-if (hPaneHit) return hPaneHit;
-}
+var hHit = _findTriggerInNode(hintEl) || _findTriggerInNode(hintEl.closest?.(_AG_PANE_SEL));
+if (hHit) return hHit;
 }
 var visList = [], firstHidden = null;
 if (d.querySelectorAll) {
-var list = d.querySelectorAll(_AG_TRIG_SEL);
-for (var i = 0; i < list.length; i += 1) {
-var el = list[i];
-if (!el || _isSubTrigger(el)) continue;
-if (_isTrigVisible(el)) {
-if (_isTrigExpanded(el)) return el;
-visList.push(el);
-} else if (!firstHidden) {
-firstHidden = el;
-}
+var cands = _mainTrigs(d);
+if (cands.length === 1) return cands[0];
+for (var j = 0; j < cands.length; j++) {
+var cEl = cands[j];
+if (_isTrigVisible(cEl)) {
+if (_isTrigExpanded(cEl)) return cEl;
+visList.push(cEl);
+} else if (!firstHidden) firstHidden = cEl;
 }
 }
 if (visList.length > 1) {
@@ -1751,6 +1748,8 @@ var _trackOpts = { capture: true, passive: true };
 doc.addEventListener?.("pointerdown", _trackTarget, _trackOpts);
 doc.addEventListener?.("focusin", _trackTarget, _trackOpts);
 function _resolveCurTrigger() {
+var allM = _mainTrigs(doc);
+if (allM.length === 1) { trackedTrigger = allM[0]; return allM[0]; }
 var p = findAntigravityPanel(doc);
 if (p) {
 var fromOpen = findAntigravityTrigger(doc);
@@ -2421,11 +2420,11 @@ scan();
 var MO = opts.MutationObserver || win?.MutationObserver || (typeof MutationObserver === "function" ? MutationObserver : null);
 if (typeof MO === "function") {
 var ctrlSel = '[data-testid="model-selector-trigger"],button[aria-label^="Select model"],[data-testid="model-selector-panel"],[role="menu"]';
-var noiseSel = '[data-testid="autoscroll-viewport"],.toast-viewport,[data-testid="sidebar-split"]>div:first-child';
+var noiseSel = '[data-testid="autoscroll-viewport"],.toast-viewport,[data-testid="sidebar-split"]>div:first-child,aside,[data-hover-card-popup]';
 observer = new MO((recs) => {
 if (_intMut) return;
-if (!memOnly && Array.isArray(recs) && recs.length) {
-if (activeSection && activePanel?.contains(activeSection) && recs.every((sr) => { var st = sr?.target, sel = st && (st.nodeType === 1 ? st : st.parentElement); return sel && activeSection.contains(sel); })) return;
+if (Array.isArray(recs) && recs.length) {
+if (!memOnly && activeSection && activePanel?.contains(activeSection) && recs.every((sr) => { var st = sr?.target, sel = st && (st.nodeType === 1 ? st : st.parentElement); return sel && activeSection.contains(sel); })) return;
 if (!activePanel) {
 var rel = recs.some((r) => {
 var t = r?.target, el = t && (t.nodeType === 1 ? t : t.parentElement);

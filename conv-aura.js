@@ -71,7 +71,7 @@
   }
 
   function isLiveMatchedIndicator(el, sel, skipSyncVis = false, scope = null) {
-    return Boolean(
+    return !!(
       el &&
         el.isConnected === true &&
         typeof el.nodeType === 'number' &&
@@ -118,7 +118,7 @@
       return true;
     }
     cachedRunningEl = queryScopedIndicator(scope, RUNNING_SEL, skipSyncVis);
-    const running = Boolean(cachedRunningEl);
+    const running = !!(cachedRunningEl);
     cachedRunningScope = scope;
     cachedRunningVal = running;
     cachedRunningAt = now;
@@ -139,7 +139,7 @@
       return true;
     }
     cachedDecisionEl = queryScopedIndicator(scope, DECISION_SEL, skipSyncVis);
-    const awaiting = Boolean(cachedDecisionEl);
+    const awaiting = !!(cachedDecisionEl);
     cachedDecisionScope = scope;
     cachedDecisionVal = awaiting;
     cachedDecisionAt = now;
@@ -333,7 +333,7 @@
       extra.speed = opt.speed;
       extra.semantic = opt.semantic || 'none';
       extra.ambientIntensity = ambientIntensity;
-      extra.still = Boolean(still);
+      extra.still = !!(still);
       extra.spectrum = spectrum !== undefined && spectrum !== null ? spectrum : undefined;
       if (still && typeof glow.drawStaticSnapshot === 'function') {
         extra.still = true;
@@ -370,8 +370,8 @@
     const PP_OPEN = 'data-ag-pp-open';
     const isAB = () => typeof document !== 'undefined' && document.documentElement?.getAttribute?.(WB) === '1';
     const isPpOpen = () => typeof document !== 'undefined' && document.documentElement?.getAttribute?.(PP_OPEN) === '1';
-    const isH = () => Boolean(typeof document !== 'undefined' && document.hidden);
-    const isP = () => Boolean(isH() || isAB() || wb || isPpOpen());
+    const isH = () => !!(typeof document !== 'undefined' && document.hidden);
+    const isP = () => !!(isH() || isAB() || wb || isPpOpen());
 
     function normAmbientVal(v) {
       if (v === null || v === undefined || v === '') return 1;
@@ -399,17 +399,17 @@
     }
 
     function checkWindowFocused() {
-      if (typeof isWindowFocused === 'function') return Boolean(isWindowFocused());
+      if (typeof isWindowFocused === 'function') return !!(isWindowFocused());
       try {
         if (typeof document !== 'undefined' && typeof document.hasFocus === 'function') {
-          return Boolean(document.hasFocus());
+          return !!(document.hasFocus());
         }
       } catch {}
       return true;
     }
 
     function isValidConvView(cv) {
-      return Boolean(
+      return !!(
         cv &&
           cv.isConnected !== false &&
           !cv.closest?.('.agy-home') &&
@@ -472,10 +472,10 @@
 
     function advancePhase(now = readNowMs(), fromAnimLoop = false) {
       if (!convAura || !convAura.host || !convAura.host.isConnected) return 'off';
-      const skipSyncVis = Boolean(fromAnimLoop && lastFullVisAt >= 0 && Math.abs(now - lastFullVisAt) < 2000);
+      const skipSyncVis = !!(fromAnimLoop && lastFullVisAt >= 0 && Math.abs(now - lastFullVisAt) < 2000);
       const scope = convAura.convView || null;
       const runningNow = isConvRunning(skipSyncVis, scope);
-      const awaitingNow = externalAwaiting !== null ? Boolean(externalAwaiting) : isAwaitingDecision(skipSyncVis, scope);
+      const awaitingNow = externalAwaiting !== null ? !!(externalAwaiting) : isAwaitingDecision(skipSyncVis, scope);
       const freshErr = externalErrorPending || (!runningNow && consumeFreshDomError(scope));
       if (externalErrorPending) externalErrorPending = false;
 
@@ -621,43 +621,36 @@
         return;
       }
 
+      const readSize = () => [seatParent.clientWidth || convView.clientWidth || 0, seatParent.clientHeight || convView.clientHeight || 0];
+      const readPhase = () => {
+        const r = isConvRunning(false, convView);
+        const a = externalAwaiting !== null ? !!(externalAwaiting) : isAwaitingDecision(false, convView);
+        return [r, a ? 'awaiting-decision' : r ? 'running' : 'idle'];
+      };
       if (convAura) {
         if (convAura.seatParent !== seatParent || convAura.convView !== convView || !convAura.host.isConnected || !convAura.canvas.isConnected) {
-          if (convAura.ro) {
-            try {
-              convAura.ro.disconnect();
-            } catch {}
-          }
           const switchedPane = convAura.convView !== convView;
+          const nowRe = readNowMs();
+          const [runRe, phaseRe] = readPhase();
+          const canDeferRelayout = !switchedPane && !convAura.backingReleased && !!(convAura.ro) && convAura.width > 0 && convAura.height > 0 && typeof requestAnimationFrame === 'function' && !document.hidden;
+          const [reW, reH] = canDeferRelayout ? [0, 0] : readSize();
+          try { convAura.ro?.disconnect(); } catch {}
           convAura.seatParent = seatParent;
           convAura.convView = convView;
           convAura.parked = false;
           seatParent.insertBefore(convAura.host, seatParent.firstChild);
-          if (convAura.ro) {
-            try {
-              convAura.ro.observe(seatParent);
-            } catch {}
+          try { convAura.ro?.observe(seatParent); } catch {}
+          if (!canDeferRelayout) {
+            if (reW > 0 && reH > 0 && convAura.applySize) convAura.applySize(reW, reH);
+            else convAura.relayout?.();
           }
-          const canDeferRelayout =
-            !switchedPane &&
-            !convAura.backingReleased &&
-            Boolean(convAura.ro) &&
-            convAura.width > 0 &&
-            convAura.height > 0 &&
-            typeof requestAnimationFrame === 'function' &&
-            !document.hidden;
-          if (!canDeferRelayout && typeof convAura.relayout === 'function') convAura.relayout();
-          const nowRe = readNowMs();
-          const runRe = isConvRunning(false, convView);
-          const awaitRe = externalAwaiting !== null ? Boolean(externalAwaiting) : isAwaitingDecision(false, convView);
           convAura.wasRunning = runRe;
           convAura.runStartedAt = runRe ? nowRe : 0;
-          convAura.decisionHolding = false;
-          convAura.unfocusedHold = false;
+          convAura.decisionHolding = convAura.unfocusedHold = false;
           convAura.sleepReason = '';
-          convAura.phase = awaitRe ? 'awaiting-decision' : runRe ? 'running' : 'idle';
+          convAura.phase = phaseRe;
           convAura.phaseAt = nowRe;
-          setAttrIfChanged(convAura.host, 'data-aura-phase', convAura.phase);
+          setAttrIfChanged(convAura.host, 'data-aura-phase', phaseRe);
           convAura.wake(!canDeferRelayout);
           return;
         }
@@ -688,27 +681,22 @@
         return;
       }
 
+      const initNow = readNowMs();
+      const [initW, initH] = readSize();
+      const [initRunning, initPhase] = readPhase();
+      consumeFreshDomError(convView); // prime historical errors before DOM writes
+
       const host = document.createElement('div');
       host.className = 'ag-cs-conv-aura-host';
       host.setAttribute('data-ag-no-i18n', '');
       host.setAttribute('aria-hidden', 'true');
-      host.style.setProperty('top', 'auto', 'important');
-      host.style.setProperty('bottom', '0', 'important');
-      host.style.setProperty('left', '0', 'important');
-      host.style.setProperty('right', '0', 'important');
-      host.style.setProperty('height', '32%', 'important');
+      host.setAttribute('data-aura-phase', initPhase);
+      for (const [k, v] of [['top', 'auto'], ['bottom', '0'], ['left', '0'], ['right', '0'], ['height', '32%']]) host.style.setProperty(k, v, 'important');
 
       const glowCanvas = document.createElement('canvas');
       glowCanvas.className = 'ag-cs-conv-glow';
       host.appendChild(glowCanvas);
       seatParent.insertBefore(host, seatParent.firstChild);
-
-      const initNow = readNowMs();
-      const initRunning = isConvRunning(false, convView);
-      const initAwaiting = externalAwaiting !== null ? Boolean(externalAwaiting) : isAwaitingDecision(false, convView);
-      const initPhase = initAwaiting ? 'awaiting-decision' : initRunning ? 'running' : 'idle';
-      host.setAttribute('data-aura-phase', initPhase);
-      consumeFreshDomError(convView); // prime historical errors without firing false alarm on initial mount
 
       const state = {
         seatParent,
@@ -733,7 +721,7 @@
         lastOptics: null,
         wasRunning: initRunning,
         glow: rippleCore?.mountBrandHorizonGlow
-          ? rippleCore.mountBrandHorizonGlow(glowCanvas)
+          ? rippleCore.mountBrandHorizonGlow(glowCanvas, { width: 0, height: 0 })
           : { mode: 'none', resize() {}, clear() {}, draw() {}, drawStaticSnapshot() {}, dispose() {} },
         timer: 0,
         resizeTimer: 0,
@@ -899,7 +887,7 @@
         }
 
         // Split-Rate 300Hz VSync throttle; on real WebGL2 with explicit targetFps (minGap>0), drive smooth VSync 60fps for active phases and ~30fps (33ms) for pre-sleep settling phases
-        const isGpuGlow = Boolean(state.glow && state.glow.mode === 'webgl2');
+        const isGpuGlow = !!(state.glow && state.glow.mode === 'webgl2');
         const minGap = isGpuGlow && typeof getMinFrameGapMs === 'function' ? Number(getMinFrameGapMs() || 0) : 0;
         const smoothGpu = isGpuGlow && minGap > 0;
         const isPreSleepPhase = !inLiftoffEbb && (phase === 'idle' || phase === 'awaiting-decision' || phase === 'long-task-complete');
@@ -922,7 +910,7 @@
 
         const phaseElapsed = now - state.phaseAt;
         const settleDecisionHold = allowLivingFlow && phase === 'awaiting-decision' && phaseElapsed >= CONV_AURA_DECISION_BREATH_MS;
-        const settleErrorZero = Boolean(state.pendingErrorClear) || (phase === 'error-halted' && phaseElapsed >= CONV_AURA_ERROR_MS);
+        const settleErrorZero = !!(state.pendingErrorClear) || (phase === 'error-halted' && phaseElapsed >= CONV_AURA_ERROR_MS);
         const settleLongComplete = allowLivingFlow && phase === 'long-task-complete' && phaseElapsed >= CONV_AURA_LONG_COMPLETE_MS;
         const settleIdleSleep = allowLivingFlow && phase === 'idle' && !inLiftoffEbb && phaseElapsed >= CONV_AURA_IDLE_SLEEP_MS;
 
@@ -1101,7 +1089,7 @@
         state.ro = new ResizeObserver((entries) => {
           if (isH()) return releaseBacking();
           const cr = entries && entries[0] && entries[0].contentRect;
-          const hasCr = Boolean(cr && cr.width > 0 && cr.height > 0);
+          const hasCr = !!(cr && cr.width > 0 && cr.height > 0);
           const nextW = hasCr ? Math.round(cr.width) : 0;
           const nextH = hasCr ? Math.round(cr.height) : 0;
           const now = readNowMs();
@@ -1135,8 +1123,10 @@
         state.ro.observe(seatParent);
       }
 
+      state.applySize = applySize;
       convAura = state;
-      layout(true);
+      if (initW > 0 && initH > 0) applySize(initW, initH);
+      else layout(true);
       wake(true);
     }
 
@@ -1204,7 +1194,7 @@
     function setSemanticState(patch = {}) {
       if (!patch || typeof patch !== 'object') return;
       if ('awaitingDecision' in patch) {
-        externalAwaiting = patch.awaitingDecision === null ? null : Boolean(patch.awaitingDecision);
+        externalAwaiting = patch.awaitingDecision === null ? null : !!(patch.awaitingDecision);
       }
       if (patch.hasError === true) {
         externalErrorPending = true;

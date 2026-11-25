@@ -782,11 +782,15 @@ void main() {
     // ── 尺寸缓存：ResizeObserver 推送，取消每帧 getBoundingClientRect ──
     let cachedW = 0;
     let cachedH = 0;
+    let cachedL = 0;
+    let cachedT = 0;
+    let hasRect = false;
     let resizeObserver = null;
     const seedSizeFromRect = () => {
       const rect = typeof canvas.getBoundingClientRect === 'function' ? canvas.getBoundingClientRect() : null;
       cachedW = rect ? rect.width : canvas.width || 0;
       cachedH = rect ? rect.height : canvas.height || 0;
+      if (rect && rect.width >= 10) { cachedL = rect.left; cachedT = rect.top; hasRect = true; rectAge = 0; }
       return rect;
     };
     if (typeof ResizeObserver === 'function') {
@@ -796,6 +800,7 @@ void main() {
           cachedW = box.width;
           cachedH = box.height;
         }
+        hasRect = false;
         rectAge = 999; // 布局变化后下一帧校准指针局部坐标
       });
       try {
@@ -892,26 +897,16 @@ void main() {
 
     const readPrismStrength = (st) => clamp(Number(st.prismStrength ?? 1), 0, 1);
 
-    // 指针事件时读取一次 rect，换算为局部坐标并顺带校准尺寸
-    const syncPointerFromRect = () => {
+    // 指针事件时优先复用缓存 rect，避免高频 pointermove 反复触发同步回流
+    const syncPointerFromRect = (force = false) => {
+      if (pointerClientX < -2000 || pointerClientY < -2000) { pointerLocalX = pointerLocalY = -9999; return; }
+      if (!force && hasRect && rectAge < 0.8) { pointerLocalX = pointerClientX - cachedL; pointerLocalY = pointerClientY - cachedT; return; }
       rectAge = 0;
-      if (pointerClientX < -2000 || pointerClientY < -2000) {
-        pointerLocalX = -9999;
-        pointerLocalY = -9999;
-        return;
-      }
       const rect = typeof canvas.getBoundingClientRect === 'function' ? canvas.getBoundingClientRect() : null;
-      if (!rect || rect.width < 10) {
-        pointerLocalX = -9999;
-        pointerLocalY = -9999;
-        return;
-      }
-      if (!resizeObserver) {
-        cachedW = rect.width;
-        cachedH = rect.height;
-      }
-      pointerLocalX = pointerClientX - rect.left;
-      pointerLocalY = pointerClientY - rect.top;
+      if (!rect || rect.width < 10) { hasRect = false; pointerLocalX = pointerLocalY = -9999; return; }
+      if (!resizeObserver) { cachedW = rect.width; cachedH = rect.height; }
+      cachedL = rect.left; cachedT = rect.top; hasRect = true;
+      pointerLocalX = pointerClientX - cachedL; pointerLocalY = pointerClientY - cachedT;
     };
 
     const step = (dtSec = 0.016) => {
@@ -926,10 +921,10 @@ void main() {
         return false;
       }
 
-      // 指针静止但页面滚动 / 重排时，低频（~2Hz）校准局部坐标
+      // 指针静止但页面滚动 / 重排时，低频校准局部坐标
       if (pointerClientX > -2000) {
         rectAge += dt;
-        if (rectAge > 0.5) syncPointerFromRect();
+        if (rectAge > 1.5) syncPointerFromRect(true);
       }
 
       const st = getState() || {};
