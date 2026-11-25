@@ -10380,6 +10380,15 @@ function buildSettingsChannelExpression(config = null, opts = null) {
       try { (window.__agPrism || window.__agClaudeStyle)?.sync?.(); } catch {}
       return { ok: true, reused: true, codeHash: targetHash };
     }
+    try {
+      const staleSec = document.getElementById?.('ag-cs-settings-sec');
+      if (staleSec) {
+        try { staleSec.querySelector?.('[data-testid="prism-wallpaper-slot"]')?.__agPrismWpUiHandle?.destroy?.(); } catch {}
+        try { staleSec.querySelector?.('[data-testid="prism-suggester-slot"]')?.__agPrismSgUiHandle?.destroy?.(); } catch {}
+        try { staleSec.__agMascotStageApi?.dispose?.(); } catch {}
+        staleSec.remove?.();
+      }
+    } catch {}
     ${minRuntime};
     try {
       const panel = globalThis.__agPrismSettingsPanel || window.__agPrismSettingsPanel;
@@ -10395,7 +10404,7 @@ function buildSettingsChannelExpression(config = null, opts = null) {
     } catch {}
     try { (window.__agPrism || window.__agClaudeStyle)?.sync?.(); } catch {}
     try { document.getElementById('ag-cs-settings-sec')?.__prismMountThoughtUi?.(); } catch {}
-    try { window.__prismMountWallpaperUi?.(); } catch {}
+    try { document.getElementById('ag-cs-settings-sec')?.__prismMountWp?.(); } catch {}
     try { (document.getElementById('ag-cs-settings-sec') || document.getElementById('ag-prism-settings-sec'))?.__prismMountSg?.(); } catch {}
     return { ok: true, codeHash: targetHash };
   })()`;

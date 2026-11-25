@@ -2138,6 +2138,8 @@ export class PrismDaemon {
     this.periodicPickerCodeHash = '';
     this._periodicPickerHashSource = '';
     this.settingsExpr = '';
+    this.settingsCodeHash = '';
+    this._settingsHashSource = '';
     this.mascotExpr = '';
     this.mascotCodeHash = '';
     this._mascotHashSource = '';
@@ -4299,6 +4301,8 @@ export class PrismDaemon {
     this._buildWallpaperExprForConfig(cfg, cacheOpts);
     this._buildPeriodicPickerExprForConfig(cfg, cacheOpts);
     this.settingsExpr = '';
+    this.settingsCodeHash = '';
+    this._settingsHashSource = '';
     this._buildMascotExprForConfig(cfg, cacheOpts);
     this._buildSuggesterExprForConfig(cfg, cacheOpts);
     this._buildHomeStudioExprForConfig(cfg, cacheOpts);
@@ -5324,6 +5328,28 @@ export class PrismDaemon {
   }
 
   // ── 第九通道：设置面板 + 全量 8 语言词典按需下发（仅当设置弹窗打开时触发） ──────────
+  _extractSettingsCodeHash(expr) {
+    const str = typeof expr === 'string' ? expr : '';
+    if (!str) return '';
+    const m = /const targetHash = "([^"]+)"/.exec(str);
+    if (m && m[1]) return m[1];
+    return crypto.createHash('sha256').update(str).digest('hex').slice(0, 16);
+  }
+
+  _getSettingsExprHash(expr = this.settingsExpr) {
+    const str = typeof expr === 'string' ? expr : '';
+    if (!str) return '';
+    if (str === this._settingsHashSource && this.settingsCodeHash) {
+      return this.settingsCodeHash;
+    }
+    const hash = this._extractSettingsCodeHash(str);
+    if (str === this.settingsExpr) {
+      this._settingsHashSource = str;
+      this.settingsCodeHash = hash;
+    }
+    return hash;
+  }
+
   _ensureSettingsExpr(cacheOpts = undefined) {
     if (this.settingsExpr) return this.settingsExpr;
     if (typeof this.cdp?.buildSettingsChannelExpression !== 'function') return '';
@@ -5335,6 +5361,8 @@ export class PrismDaemon {
       this._scheduleBundleCacheFlush();
     }
     this.settingsExpr = typeof expr === 'string' ? expr : '';
+    this._settingsHashSource = this.settingsExpr;
+    this.settingsCodeHash = this._extractSettingsCodeHash(this.settingsExpr);
     return this.settingsExpr;
   }
 
@@ -9965,6 +9993,13 @@ export class PrismDaemon {
               document.querySelector('.agy-home') &&
               !(window.__agPrismHomeStudioPanel || globalThis.__agPrismHomeStudioPanel || window.__agHomeStudioPanel || globalThis.__agHomeStudioPanel)
           ),
+          hasSettingsPanel: Boolean(
+            (window.__agPrismSettingsPanel || globalThis.__agPrismSettingsPanel) &&
+              window.__agCsLocales &&
+              window.__agCsLocales.__isFullLocales
+          ),
+          hasSettingsDialog: Boolean(document.querySelector('[role="dialog"]') || document.getElementById('ag-cs-settings-sec')),
+          settingsCodeHash: String((window.__agPrismSettingsPanel || globalThis.__agPrismSettingsPanel)?.__prismCodeHash || ''),
           needsSettingsChannel: Boolean(
             (document.querySelector('[role="dialog"]') || document.getElementById('ag-cs-settings-sec')) &&
               (!window.__agPrismSettingsPanel || !(window.__agCsLocales && window.__agCsLocales.__isFullLocales))
@@ -9974,6 +10009,7 @@ export class PrismDaemon {
           hasInlineDiff: Boolean(window.__agPrismInlineDiff && !window.__agPrismInlineDiff.getDebugState?.()?.destroyed),
           hasWallpaper: Boolean(window.__agPrismWallpaper && !window.__agPrismWallpaper.getDebugState?.()?.destroyed),
           hasWallpaperUi: Boolean(typeof window.__prismMountWallpaperUi === 'function'),
+          wallpaperCodeHash: String((window.__agPrismWallpaper || globalThis.__agPrismWallpaper)?.__prismCodeHash || ''),
           hasSuggester: Boolean(window.__agPrismSuggester && !window.__agPrismSuggester.getDebugState?.()?.destroyed),
           hasSuggesterUi: Boolean(typeof window.__prismMountSuggesterUi === 'function'),
           hasPeriodicPicker: Boolean(
@@ -10042,10 +10078,17 @@ export class PrismDaemon {
         (!probe.hasInlineDiff || !entry.inlineDiffScriptId || !entry.inlineDiffMounted);
       const needsInlineDiffCleanup =
         !inlineDiffAvailable && Boolean(probe.hasInlineDiff || entry.inlineDiffScriptId || entry.inlineDiffMounted);
+      if (wallpaperAvailable && !entry.wallpaperSkipped && !this.wallpaperExpr && typeof this.cdp.buildWallpaperExpression === 'function') {
+        this._buildWallpaperExprForConfig(cfg);
+      }
+      const expectedWallpaperHash = wallpaperAvailable && this.wallpaperExpr ? this._getWallpaperExprHash(this.wallpaperExpr) : '';
+      const wallpaperHashMismatch = Boolean(
+        expectedWallpaperHash && probe.wallpaperCodeHash && probe.wallpaperCodeHash !== expectedWallpaperHash
+      );
       const needsWallpaperHeal =
         wallpaperAvailable &&
         !entry.wallpaperSkipped &&
-        (!probe.hasWallpaper || !probe.hasWallpaperUi || !entry.wallpaperScriptId || !entry.wallpaperMounted);
+        (!probe.hasWallpaper || !probe.hasWallpaperUi || wallpaperHashMismatch || !entry.wallpaperScriptId || !entry.wallpaperMounted);
       const needsWallpaperCleanup =
         !wallpaperAvailable && Boolean(probe.hasWallpaper || probe.hasWallpaperUi || entry.wallpaperScriptId || entry.wallpaperMounted);
       const needsSuggesterHeal =
@@ -10097,6 +10140,12 @@ export class PrismDaemon {
       const homeStudioScriptStale = Boolean(!entry.homeStudioScriptId || (expectedHomeStudioSig && entry.lastHomeStudioScriptSig !== expectedHomeStudioSig));
       const needsHomeStudioHeal = hasHomeStudioOnDisk && (!probe.hasHomeStudio || homeStudioHashMismatch || homeStudioScriptStale);
       const needsHomeStudioCleanup = !homeStudioEnabled && Boolean(probe.hasHomeStudio || entry.homeStudioScriptId || entry.homeStudioMounted);
+      const shouldCheckSettingsHash = Boolean(probe.needsSettingsChannel || probe.hasSettingsPanel || probe.hasSettingsDialog);
+      const expectedSettingsHash = shouldCheckSettingsHash ? this._getSettingsExprHash(this._ensureSettingsExpr()) : '';
+      const settingsHashMismatch = Boolean(
+        expectedSettingsHash && (probe.hasSettingsPanel || probe.hasSettingsDialog) && probe.settingsCodeHash !== expectedSettingsHash
+      );
+      const needsSettingsHeal = Boolean(probe.needsSettingsChannel || settingsHashMismatch);
       let healed = false;
       if (
         (entry.sidebarHostVerified === false && probe.isHostDom) ||
@@ -10323,6 +10372,9 @@ export class PrismDaemon {
             forceEval: Boolean(probe.needsHomeStudioChannel),
             runCleanup: needsHomeStudioCleanup,
           });
+        }
+        if (needsSettingsHeal) {
+          await this._deliverSettingsChannelToEntry(entry);
         }
         if (thoughtEnabled) {
           if (!this.thoughtExpr && typeof this.cdp.buildThoughtExpression === 'function') {
@@ -10590,7 +10642,7 @@ export class PrismDaemon {
             runCleanup: needsHomeStudioCleanup,
           });
         }
-        if (probe.needsSettingsChannel) {
+        if (needsSettingsHeal) {
           healed = true;
           await this._deliverSettingsChannelToEntry(entry);
         }

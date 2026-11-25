@@ -2661,6 +2661,7 @@
           const repoChip = mkChip(U('aboutRepoSyncTitle', 'Git'), 'data-ag-cs-repo-status');
           const repoInfo = ap(mkEl('div', 'ag-cs-about-repo-info'), mkEl('span', 'font-medium text-foreground', `Obsidian Prism v${version}`), repoChip);
           const syncBtn = mkB('ag-cs-repo-sync-btn', U('aboutRepoSyncBtn', 'Sync'), 'data-ag-cs-repo-sync');
+          sa(syncBtn, 'data-tone', 'secondary');
 
           let repoProbedOnce = false;
           let repoSyncBusy = false;
@@ -2804,10 +2805,15 @@
           const wbInitUi = getStorageWbUi(lang);
           const storageChip = mkChip(U('storageHealthIdle', 'DB'), 'data-ag-cs-storage-status');
           const archiveBtn = mkB('ag-cs-repo-sync-btn', U('storageArchiveBtn', 'Archive'), 'data-ag-cs-storage-archive');
+          sa(archiveBtn, 'data-tone', 'secondary');
           const archRestartBtn = mkB('ag-cs-repo-sync-btn', U('storageArchiveRestartBtn', 'Archive & Restart'), 'data-ag-cs-archive-restart');
+          sa(archRestartBtn, 'data-tone', 'amber');
           const restoreBtn = mkB('ag-cs-repo-sync-btn', U('storageRestoreBtn', 'Restore Archive'), 'data-ag-cs-storage-restore');
+          sa(restoreBtn, 'data-tone', 'secondary');
           const autoExitOffBtn = mkB('ag-cs-repo-sync-btn', U('storageAutoExitOff', 'Off'), 'data-ag-cs-auto-archive-exit', 'off');
+          sa(autoExitOffBtn, 'data-tone', 'secondary');
           const autoExitOnBtn = mkB('ag-cs-repo-sync-btn', U('storageAutoExitOn', 'On'), 'data-ag-cs-auto-archive-exit', 'on');
+          sa(autoExitOnBtn, 'data-tone', 'secondary');
           const archActionChip = mkEl('span', 'ag-cs-repo-chip', '');
           setVis(archActionChip, false);
           sa(archActionChip, 'data-ag-cs-archive-action-status');
@@ -2853,7 +2859,9 @@
           const stPre = mkEl('pre', 'ag-cs-license-pre', '');
           sa(stPre, 'data-ag-cs-storage-detail', '1');
           const stOldBtn = mkB('ag-cs-repo-sync-btn', wbInitUi.oldMainBtn, 'data-ag-cs-storage-old');
+          sa(stOldBtn, 'data-tone', 'secondary');
           const stRefBtn = mkB('ag-cs-repo-sync-btn', wbInitUi.refreshBtn, 'data-ag-cs-storage-ref');
+          sa(stRefBtn, 'data-tone', 'secondary');
           const oldMainConfirmBox = mkEl('div', 'ag-cs-thought-cfg-box');
           setVis(oldMainConfirmBox, false);
           sa(oldMainConfirmBox, 'data-ag-cs-storage-old-box', '1');
@@ -2883,6 +2891,7 @@
           goMemSel.value = '2GiB';
           const goMemApplyBtn = mkB('ag-cs-repo-sync-btn', U('goMemLimitApplyBtn', 'Apply'), 'data-ag-cs-gomemlimit-apply');
           const goMemClearBtn = mkB('ag-cs-repo-sync-btn', U('goMemLimitClearBtn', 'Clear'), 'data-ag-cs-gomemlimit-clear');
+          sa(goMemClearBtn, 'data-tone', 'secondary');
 
           let storageBusy = false;
           let goMemBusy = false;
@@ -3237,11 +3246,11 @@
 
           ap(
             aboutBox,
-            ap(mkEl('div', 'ag-cs-about-repo-row'), ap(mkEl('div', 'ag-cs-about-repo-info'), mkEl('span', 'font-medium text-foreground', U('storageHealthTitle', 'DB')), storageChip), archiveBtn),
-            ap(mkEl('div', 'ag-cs-about-repo-row'), ap(mkEl('div', 'ag-cs-about-repo-info'), mkEl('span', 'font-medium text-foreground', U('storageAutoExitTitle', 'Auto-Archive')), mkEl('span', 'ag-cs-thought-hint', U('storageAutoExitDesc'))), ap(mkEl('div', 'ag-cs-thought-btn-group'), autoExitOffBtn, autoExitOnBtn)),
-            ap(mkEl('div', 'ag-cs-about-repo-row'), ap(mkEl('div', 'ag-cs-about-repo-info'), archActionChip), ap(mkEl('div', 'ag-cs-thought-btn-group'), archRestartBtn, restoreBtn)),
+            ap(mkEl('div', 'ag-cs-about-repo-row'), ap(mkEl('div', 'ag-cs-about-repo-info'), mkEl('span', 'font-medium text-foreground', U('storageHealthTitle', 'DB')), storageChip)),
+            ap(mkEl('div', 'ag-cs-about-repo-row'), ap(mkEl('div', 'ag-cs-thought-btn-group'), archRestartBtn, restoreBtn, archiveBtn), ap(mkEl('div', 'ag-cs-about-repo-info'), archActionChip)),
             archConfirmBox,
             restoreConfirmBox,
+            ap(mkEl('div', 'ag-cs-about-repo-row'), ap(mkEl('div', 'ag-cs-about-repo-info'), mkEl('span', 'font-medium text-foreground', U('storageAutoExitTitle', 'Auto-Archive')), mkEl('span', 'ag-cs-thought-hint', U('storageAutoExitDesc'))), ap(mkEl('div', 'ag-cs-thought-btn-group'), autoExitOffBtn, autoExitOnBtn)),
             stWb,
             goMemBox
           );
@@ -3253,7 +3262,15 @@
             sa(a, 'target', '_blank');
             sa(a, 'rel', 'noopener noreferrer');
             sa(a, 'data-ag-cs-credit', item.repo);
-            ap(creditsGrid, ap(a, mkEl('span', 'truncate', item.repo), mkEl('span', 'opacity-75 text-[10px] shrink-0', `${item.meta} ↗`)));
+            sa(a, 'title', `${item.repo} — ${item.meta}`);
+            ap(
+              creditsGrid,
+              ap(
+                a,
+                ap(mkEl('span', 'ag-cs-credit-top'), mkEl('span', 'ag-cs-credit-repo', item.repo), mkEl('span', 'ag-cs-credit-ext', '↗')),
+                mkEl('span', 'ag-cs-credit-meta', item.meta)
+              )
+            );
           }
           ap(
             aboutBox,
