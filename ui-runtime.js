@@ -2028,7 +2028,7 @@
     const ancDlg = parentCtx ? parentCtx.inDlg : !!(cl(el, '[role="dialog"]'));
     const ancMdl = parentCtx ? parentCtx.inMdl : !!(cl(el, MODEL_PANEL_SEL));
 
-    let touchedButtons = false, inPlainDialog = false;
+    let touchedButtons = false, inPlainDialog = false, inSbR = false;
     const inConvStream = tid !== 'conversation-view' && tid !== 'agent-input-box' && !cls.includes('agy-home') && ancConv && !ancComp;
     const chkDlg = (rootHit) => {
       inPlainDialog = true;
@@ -2046,9 +2046,16 @@
         dirtyFlags.r = dirtyFlags.c = dirtyFlags.l = dirtyFlags.tk = dirtyFlags.cf = touchedButtons = true;
       }
 
-      if (tid === 'conversation-row-sidebar' || tid === 'breadcrumb-segment' || tid === 'conversation-row-history' || ancSide || q('[data-testid="conversation-row-sidebar"],[data-testid="breadcrumb-segment"],[data-testid="conversation-row-history"]')) {
-        dirtyFlags.s = true;
-        if (isAdded) touchedButtons = true;
+      const isRc = tid === 'conversation-row-sidebar' || tid === 'breadcrumb-segment' || tid === 'conversation-row-history' || q('[data-testid="conversation-row-sidebar"],[data-testid="breadcrumb-segment"],[data-testid="conversation-row-history"]');
+      const inSR = !isRc && (parentCtx ? parentCtx.inSR : cl(el, '[data-testid="conversation-row-sidebar"]'));
+      if (isRc || ancSide || inSR) {
+        if (inSR) {
+          inSbR = true;
+          if (tid === 'status-loading-spinner' || tid.includes('stop') || tid.includes('cancel') || q('[data-testid="status-loading-spinner"]')) dirtyFlags.s = true;
+        } else {
+          dirtyFlags.s = true;
+          if (isAdded) touchedButtons = true;
+        }
       }
 
       if (COMP_TIDS.has(tid) || cls.includes('surface-composer-card') || ancComp || q(`${S_IB}, [data-testid="input-cancel-button"], ${TK_SEL}, [data-testid="queued-messages-card"], .surface-composer-card`)) {
@@ -2137,7 +2144,7 @@
       }
     }
 
-    if (!inPlainDialog) {
+    if (!inPlainDialog && !inSbR) {
       if (isAdded && (touchedButtons || isHostButtonCandidate(el) || q(HOST_BTN_QUERY))) {
         dirtyFlags.b = true;
         dirtyAddedRoots.add(el);
@@ -2169,7 +2176,8 @@
     const modelOverlayChanged = !!(flags.o) && (!!modelPanelNow || hadModelPanelOpen);
     const cPlan = isFullSync || flags.c || modelOverlayChanged ? measureCrabClearanceAll() : null;
     if (flags.f || flags.r || flags.c || flags.t) convAuraCtl.prime?.();
-    return { inHome, inHero, formalConv, curCascadeId, isConvSwap, isAsyncConvEntry, homeComposerSampled, convInputRect, sidebarSnap, visibleChangedHeaders, lensOverlays, caretList, modelPanelNow, modelOverlayChanged, cPlan };
+    const checkCaustics = Boolean(flags.f || flags.cf || flags.r);
+    return { inHome, inHero, formalConv, curCascadeId, isConvSwap, isAsyncConvEntry, homeComposerSampled, convInputRect, sidebarSnap, visibleChangedHeaders, lensOverlays, caretList, modelPanelNow, modelOverlayChanged, cPlan, checkCaustics };
   };
 
   let enhancerSyncTimer = 0;
@@ -2312,10 +2320,11 @@
       } else if (!deferHeavyConvWork && flags.tk) {
         streamChoreoCtl.syncThinkingSparks(latestPrimaryModelInfo, latestPaneModelMap);
       }
-      if (flags.f || flags.r || flags.s || flags.c) {
+      if (flags.f || flags.r || flags.c) {
         streamChoreoCtl.syncHeroRouteChoreography(measured);
-      } else if (flags.cf) {
-        streamChoreoCtl.syncHeroCCaustics(measured.visibleChangedHeaders);
+      } else {
+        if (flags.s && measured.sidebarSnap) streamChoreoCtl.syncSidebarSelectionGlide(measured.sidebarSnap);
+        if (flags.cf) streamChoreoCtl.syncHeroCCaustics(measured.visibleChangedHeaders);
       }
       if (!deferHeavyConvWork && (flags.f || flags.r || flags.c || flags.l)) {
         streamChoreoCtl.syncDualStreamEngine();
@@ -2468,7 +2477,7 @@
   }
 
   // ── Event Handlers ─────────────────────────────────────────────────────
-  let blurTm = 0;
+  let blurTm = 0, lbr = 0;
   const clearWinBlur = () => {
     try {
       if (blurTm) { CT(blurTm); blurTm = 0; }
@@ -2484,10 +2493,13 @@
   };
   const wakeWinBlur = () => {
     try {
-      if (blurTm || ha(de(), BLUR_ATTR)) {
-        clearWinBlur();
-        if (typeof document.hasFocus === 'function' && !document.hasFocus()) onWinBlur();
-      }
+      const hasA = ha(de(), BLUR_ATTR);
+      if (!hasA && !blurTm) return;
+      const t = performance.now();
+      if (!hasA && blurTm && t - lbr < 400) return;
+      lbr = t;
+      clearWinBlur();
+      if (typeof document.hasFocus === 'function' && !document.hasFocus()) onWinBlur();
     } catch {}
   };
   function onWinBlur() {
@@ -2497,6 +2509,7 @@
         scheduleResizingEnd();
       }
       if (destroyed || blurTm) return;
+      lbr = performance.now();
       blurTm = ST(() => {
         try {
           blurTm = 0;
@@ -2600,6 +2613,7 @@
       if (ev.key === '[' && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !isEditableTarget(ev.target) && !cl(ev.target, '[role="dialog"], .monaco-editor')) {
         const html = de(), k = 'data-ag-cs-sidebar-collapsed';
         if (!html || cfg.sidebarRestyle === false) return;
+        bumpResizingPulse();
         ga(html, k) === '1' ? ra(html, k) : sa(html, k, '1');
       }
     } catch {}
@@ -2825,6 +2839,7 @@
                       inConv: !!(cl(tgt, '[data-testid="conversation-view"]')),
                       inComp: !!(cl(tgt, S_IB)),
                       inSide: !!(cl(tgt, 'aside')),
+                      inSR: !!(cl(tgt, '[data-testid="conversation-row-sidebar"]')),
                       inDlg: !!(cl(tgt, '[role="dialog"]')),
                       inMdl: !!(cl(tgt, MODEL_PANEL_SEL)),
                     };
@@ -2964,7 +2979,7 @@
     const root = de();
     if (destroyed || lifecycleStarted || !root) return;
     lifecycleStarted = true;
-    flattenMainStyleSheet();
+    if (!(typeof CSS !== 'undefined' && CSS.supports?.('selector(&)'))) flattenMainStyleSheet();
     observer.observe(root, {
       childList: true,
       subtree: true,

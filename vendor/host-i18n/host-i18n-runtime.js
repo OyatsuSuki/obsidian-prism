@@ -3772,7 +3772,10 @@
         if (isContextMenu) {
           pendingFullFloatScan = true;
         } else if (e && e.type === 'pointerenter') {
+          var tg = String(target.tagName || '').toUpperCase();
+          if (tg === 'PATH' || tg === 'CIRCLE' || tg === 'RECT' || tg === 'LINE' || tg === 'POLYLINE' || tg === 'POLYGON' || tg === 'ELLIPSE' || tg === 'G' || tg === 'DEFS' || tg === 'USE' || tg === 'STOP') return;
           if (exemptElements.has(target) || isDialogOrPortalWrappingDialog(target)) return;
+          if (tg !== 'BUTTON' && !target.getAttribute?.('role') && !target.hasAttribute?.('data-testid') && !target.hasAttribute?.('title') && !target.hasAttribute?.('aria-label') && target.closest?.('[data-testid="conversation-row-sidebar"]')) return;
           var hoverBound = measureSafeBoundaryDepth(target);
           if (hoverBound.blocked) return;
           if (isInsideDialog(target) && !isSmallHoverControl(target)) return;

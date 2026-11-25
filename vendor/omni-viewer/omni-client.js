@@ -2770,6 +2770,7 @@
         if (!sawExplicitScan && cur.getAttribute?.('role') === 'dialog') {
           return true;
         }
+        if (cur.hasAttribute?.('data-hover-card-popup') || cur.tagName === 'ASIDE') return true;
         const tid = cur.getAttribute?.('data-testid');
         if (tid === 'agent-input-box' || tid === 'conversation-row-sidebar') return true;
         const cls = typeof cur.className === 'string' ? cur.className : '';

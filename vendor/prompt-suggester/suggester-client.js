@@ -1195,6 +1195,42 @@
       on(doc, 'keyup', onComposerKeyUp, true);
 
       if (typeof win?.MutationObserver === 'function' && doc.documentElement) {
+        const isSuggesterNoise = (m) => {
+          const t = m?.target;
+          const el = t && (t.nodeType === 1 ? t : t.parentElement);
+          if (!el) return true;
+          if (el.id === 'ag-prism-prompt-suggester-root' || el.hasAttribute?.('data-ag-prism-suggester-owned') || el.hasAttribute?.('data-hover-card-popup')) return true;
+          if (typeof el.closest === 'function') {
+            if (el.closest('[data-ag-prism-suggester-owned],[data-hover-card-popup],.toast-viewport')) return true;
+            if (m.type === 'attributes' && m.attributeName === 'class') {
+              const tid = el.getAttribute?.('data-testid') || '';
+              if (tid !== 'conversation-view' && tid !== 'agent-input-box' && tid !== 'conversation-row-sidebar' && !el.hasAttribute?.('data-cascade-id') && !el.classList?.contains?.('agy-home')) {
+                return true;
+              }
+            }
+            if (m.type === 'childList' && el.closest('aside')) {
+              const nodes = [...(m.addedNodes || []), ...(m.removedNodes || [])];
+              const touchesRowOrRun = nodes.some((n) => {
+                if (!n || n.nodeType !== 1) return false;
+                const ntid = n.getAttribute?.('data-testid') || '';
+                if (ntid === 'conversation-row-sidebar' || ntid === 'status-loading-spinner' || n.hasAttribute?.('data-ag-cs-row-running')) return true;
+                return Boolean(n.querySelector?.('[data-testid="conversation-row-sidebar"],[data-testid="status-loading-spinner"],[data-ag-cs-row-running]'));
+              });
+              if (!touchesRowOrRun) return true;
+            }
+            if (m.type === 'childList' && el.closest('[data-testid="autoscroll-viewport"]')) {
+              const nodes = [...(m.addedNodes || []), ...(m.removedNodes || [])];
+              const touchesState = nodes.some((n) => {
+                if (!n || n.nodeType !== 1) return false;
+                const ntid = n.getAttribute?.('data-testid') || '';
+                if (ntid === 'stop-button' || ntid === 'cancel-button' || ntid === 'input-cancel-button' || ntid === 'agent-loading' || ntid === 'thinking-collapsible-trigger') return true;
+                return Boolean(n.querySelector?.('[data-testid="stop-button"],[data-testid="cancel-button"],[data-testid="input-cancel-button"],[data-testid="agent-loading"],[data-testid="thinking-collapsible-trigger"]'));
+              });
+              if (!touchesState) return true;
+            }
+          }
+          return false;
+        };
         mutObserver = new win.MutationObserver((muts) => {
           if (destroyed || !config.enabled) return;
           for (let i = 0; i < muts.length; i++) {
@@ -1203,7 +1239,7 @@
               syncOverlayForActiveCascade();
               continue;
             }
-            if (m.type === 'childList' || m.type === 'attributes') {
+            if ((m.type === 'childList' || m.type === 'attributes') && !isSuggesterNoise(m)) {
               scheduleMountCheck();
               break;
             }

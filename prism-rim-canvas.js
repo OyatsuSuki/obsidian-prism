@@ -495,6 +495,7 @@
       if (isDragSuspended()) { prismBoxCacheDirty = true; return; }
       const now = performance.now();
       if (!isRimMotionDisabled() && readAmbientScale() > 0.001 && !prismRaf && typeof requestAnimationFrame === 'function') {
+        if (!prismBoxCacheDirty && ev?.target?.closest?.('aside,[data-testid="conversation-row-sidebar"]') && cachedPrismBoxes.every((e) => e.wasCleared) && (!cachedOrchEntry || cachedOrchEntry.wasCleared)) { onPointerActivity?.(now); return; }
         const far = (e, d) => { const r = e.rect; return e.wasCleared && r && (r.width < 4 || r.height < 4 || x < r.left - d || x > r.right + d || y < r.top - d || y > r.bottom + d); };
         const farIdle = !prismBoxCacheDirty && cachedPrismBoxes.length > 0 && now - prismBoxCacheAt <= 6000 && now - lastPrismRectReadAt < 1500 && cachedPrismBoxes.every((e) => far(e, 360)) && (!cachedOrchEntry || far(cachedOrchEntry, 200));
         if (!farIdle) schedRaf();
