@@ -1136,6 +1136,9 @@ export function archiveConversations({
   dryRun = false,
   now = Date.now(),
   checkRunning = isLanguageServerRunning,
+  recheckIntervalMs = 800,
+  manifestFlushEvery = 50,
+  manifestFlushIntervalMs = 1500,
 } = {}) {
   const scan = scanConversationStorage({
     convDir,
@@ -1193,6 +1196,10 @@ export function archiveConversations({
       candidateMb: Number((targetBytes / 1048576).toFixed(1)),
     };
   }
+  const safeRecheckMs = Number.isFinite(Number(recheckIntervalMs)) ? Math.max(0, Number(recheckIntervalMs)) : 800;
+  const safeFlushEvery = Number.isFinite(Number(manifestFlushEvery)) ? Math.max(1, Math.floor(Number(manifestFlushEvery))) : 50;
+  const safeFlushMs = Number.isFinite(Number(manifestFlushIntervalMs)) ? Math.max(0, Number(manifestFlushIntervalMs)) : 1500;
+  let lastRunCheckAt = Date.now();
 
   if (targets.length === 0) {
     return {
@@ -1239,12 +1246,19 @@ export function archiveConversations({
 
     // Write pre-move journal manifest BEFORE moving any file so crashes are always discoverable
     persistManifest('in-progress');
+    let lastManifestFlushAt = Date.now();
+    let movedSinceFlush = 0;
 
-    for (const item of targets) {
-      if (isRunning()) {
-        abortedByHostRestart = true;
-        failedItems.push({ id: item.id, error: 'LANGUAGE_SERVER_STARTED_MID_ARCHIVE' });
-        break;
+    for (let idx = 0; idx < targets.length; idx++) {
+      const item = targets[idx];
+      if (safeRecheckMs === 0 || (idx > 0 && Date.now() - lastRunCheckAt >= safeRecheckMs)) {
+        const runningNow = isRunning();
+        lastRunCheckAt = Date.now();
+        if (runningNow) {
+          abortedByHostRestart = true;
+          failedItems.push({ id: item.id, error: 'LANGUAGE_SERVER_STARTED_MID_ARCHIVE' });
+          break;
+        }
       }
       let liveFiles;
       try {
@@ -1298,12 +1312,13 @@ export function archiveConversations({
           parentId: item.parentId,
           files: movedFiles,
         });
+        movedSinceFlush += 1;
       }
-      // Incrementally commit manifest after each conversation so crash recovery never loses track
-      persistManifest('in-progress');
-      if (isRunning()) {
-        abortedByHostRestart = true;
-        break;
+      // Periodically checkpoint manifest (and always write initial + final manifest; scanBatchDirForFallbackItems handles crash recovery)
+      if (movedSinceFlush >= safeFlushEvery || (movedSinceFlush > 0 && Date.now() - lastManifestFlushAt >= safeFlushMs)) {
+        persistManifest('in-progress');
+        lastManifestFlushAt = Date.now();
+        movedSinceFlush = 0;
       }
     }
 
@@ -1404,6 +1419,7 @@ export function restoreArchiveBatch({
   archiveDir = getDefaultArchiveDir(),
   batchName = 'latest',
   checkRunning = isLanguageServerRunning,
+  recheckIntervalMs = 800,
 } = {}) {
   const isRunning = () => {
     try {
@@ -1419,6 +1435,8 @@ export function restoreArchiveBatch({
       error: '检测到 Antigravity/language_server 正在运行（或状态无法确认）。请先完全退出 Antigravity，再执行一键还原。',
     };
   }
+  const safeRecheckMs = Number.isFinite(Number(recheckIntervalMs)) ? Math.max(0, Number(recheckIntervalMs)) : 800;
+  let lastRunCheckAt = Date.now();
   const safeConvDir = ensureSafeDir(convDir);
   const safeArchiveRoot = path.resolve(archiveDir);
   return withArchiveLock(safeArchiveRoot, () => {
@@ -1456,10 +1474,15 @@ export function restoreArchiveBatch({
     const failed = [];
     const partialSplits = [];
 
-    for (const item of restoreItems) {
-      if (isRunning()) {
-        failed.push({ id: item.id, error: 'LANGUAGE_SERVER_STARTED_MID_RESTORE' });
-        break;
+    for (let idx = 0; idx < restoreItems.length; idx++) {
+      const item = restoreItems[idx];
+      if (safeRecheckMs === 0 || (idx > 0 && Date.now() - lastRunCheckAt >= safeRecheckMs)) {
+        const runningNow = isRunning();
+        lastRunCheckAt = Date.now();
+        if (runningNow) {
+          failed.push({ id: item.id, error: 'LANGUAGE_SERVER_STARTED_MID_RESTORE' });
+          break;
+        }
       }
       const files = (Array.isArray(item.files) ? item.files : []).filter((fn) => typeof fn === 'string' && DB_FILE_RE.test(fn));
       if (files.length === 0) continue;

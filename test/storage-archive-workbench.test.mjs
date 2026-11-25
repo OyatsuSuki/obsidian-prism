@@ -1109,3 +1109,92 @@ test('Windows tray graceful quit via loopback CDP Browser.close, cdpPort payload
   assert.ok(bannerSrc.includes('html>body:is(.theme-light,.light-theme,.light)'), 'light styles must support body light-theme classes');
   assert.ok(bannerExpr.includes('html\\u003ebody:is(.theme-light,.light-theme,.light)'), 'serialized banner expression must preserve body light-theme selector with XSS-escaped >');
 });
+
+test('archiveConversations & restoreArchiveBatch throttle per-item checkRunning & manifest fsync while preserving mid-run fail-closed abort', () => {
+  const tmpRoot = makeTempDir('ag-prism-throttle-');
+  try {
+    const convDir = path.join(tmpRoot, 'conversations');
+    const archiveDir = path.join(tmpRoot, 'archive');
+    fs.mkdirSync(convDir, { recursive: true });
+    const now = Date.parse('2026-11-25T10:00:00Z');
+    const mainId = '99999999-9999-4999-8999-999999999999';
+    writeSizedFile(path.join(convDir, `${mainId}.db`), 512, now - 6 * 3600000);
+    const summaries = {
+      [mainId]: { status: 'CASCADE_RUN_STATUS_IDLE', lastModifiedTime: new Date(now - 6 * 3600000).toISOString() },
+    };
+    const subIds = [];
+    for (let i = 0; i < 60; i++) {
+      const id = `12345678-1234-4123-8123-${String(i).padStart(12, '0')}`;
+      subIds.push(id);
+      writeSizedFile(path.join(convDir, `${id}.db`), 256, now - 6 * 3600000);
+      summaries[id] = {
+        status: 'CASCADE_RUN_STATUS_IDLE',
+        lastModifiedTime: new Date(now - 6 * 3600000).toISOString(),
+        trajectoryMetadata: { parentConversationId: mainId },
+      };
+    }
+
+    // 1) Archiving 60 items with default time-throttled recheck must NOT invoke checkRunning 121 times
+    let archiveChecks = 0;
+    const archRes = arch.archiveConversations({
+      convDir,
+      archiveDir,
+      summaries,
+      subagentMaxAgeHours: 1,
+      now,
+      checkRunning: () => { archiveChecks += 1; return false; },
+    });
+    assert.equal(archRes.ok, true);
+    assert.equal(archRes.movedCount, 60);
+    assert.ok(archiveChecks >= 1 && archiveChecks <= 4, `Expected throttled checkRunning calls (1..4) for 60 items, got ${archiveChecks}`);
+    const manifest = JSON.parse(fs.readFileSync(path.join(archRes.batchDir, 'manifest.json'), 'utf8'));
+    assert.equal(manifest.status, 'completed');
+    assert.equal(manifest.movedCount, 60);
+    assert.equal(manifest.items.length, 60);
+
+    // 2) Restoring 60 items with default time-throttled recheck must NOT invoke checkRunning 61 times
+    let restoreChecks = 0;
+    const resOut = arch.restoreArchiveBatch({
+      convDir,
+      archiveDir,
+      batchName: archRes.batchName,
+      checkRunning: () => { restoreChecks += 1; return false; },
+    });
+    assert.equal(resOut.ok, true);
+    assert.equal(resOut.restoredCount, 60);
+    assert.ok(restoreChecks >= 1 && restoreChecks <= 4, `Expected throttled restore checkRunning calls (1..4) for 60 items, got ${restoreChecks}`);
+
+    // 3) Mid-archive host restart still aborts fail-closed immediately when recheck triggers
+    let midChecks = 0;
+    const midAbort = arch.archiveConversations({
+      convDir,
+      archiveDir,
+      summaries,
+      subagentMaxAgeHours: 1,
+      now: now + 60000,
+      recheckIntervalMs: 0,
+      checkRunning: () => (++midChecks > 4), // pre-check + 3 items pass, 4th item sees host restarted
+    });
+    assert.equal(midAbort.ok, false);
+    assert.equal(midAbort.code, 'LANGUAGE_SERVER_RUNNING');
+    assert.equal(midAbort.movedCount, 3);
+    const abortedManifest = JSON.parse(fs.readFileSync(path.join(midAbort.batchDir, 'manifest.json'), 'utf8'));
+    assert.equal(abortedManifest.status, 'aborted');
+    assert.equal(abortedManifest.abortedByHostRestart, true);
+
+    // 4) Mid-restore host restart still aborts fail-closed
+    let midRestoreChecks = 0;
+    const midRestoreAbort = arch.restoreArchiveBatch({
+      convDir,
+      archiveDir,
+      batchName: midAbort.batchName,
+      recheckIntervalMs: 0,
+      checkRunning: () => (++midRestoreChecks > 2), // pre-check + 1 item pass, 2nd item aborts
+    });
+    assert.equal(midRestoreAbort.ok, false);
+    assert.equal(midRestoreAbort.restoredCount, 1);
+    assert.ok(midRestoreAbort.failed.some((f) => f.error === 'LANGUAGE_SERVER_STARTED_MID_RESTORE'));
+  } finally {
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
