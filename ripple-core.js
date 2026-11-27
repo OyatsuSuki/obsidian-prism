@@ -1286,7 +1286,7 @@ float aa = clamp(fwidth(dist) * 1.15, 0.035, 0.14);
 float r = 0.08 + 0.16 * msk;
 return (1.0 - smoothstep(r - aa, r + aa * 0.35, dist)) * msk;
 }
-const float IFN=1.1304178;
+const float INV_FIELD_NORM=1.1304178;
 const vec3 DB=vec3(.059,.09,.227),ZB=vec3(.192,.525,1.),SB=vec3(.361,.776,.988),HB=vec3(.733,.886,1.),PC=vec3(.259,.522,.957),PI=vec3(.608,.447,.796),DAY_COBALT=vec3(.145,.388,.922),DAY_IRIS=vec3(.486,.227,.929),DAY_CORAL=vec3(.918,.263,.208),DAY_AMBER=vec3(.851,.467,.024),DE=vec3(.008,.518,.78),DAY_TERRACOTTA=vec3(.761,.349,.204),DS=vec3(.635,.247,.141),ICE_MIST=vec3(.839,.933,1.),WARM_DARK_B=vec3(.851,.467,.341),MONO_DARK_HI=vec3(.847,.878,.929);
 float sf(float t){return smoothstep(0.,1.,fract(t));}
 highp vec3 lmix(highp vec3 a,highp vec3 b,highp float f){return sqrt(max(mix(a*a,b*b,clamp(f,0.,1.)),vec3(0.)));}
@@ -1338,7 +1338,7 @@ if (glow * topFeather < 0.0008 && abs(uSurge) < 0.0001) { outColor = vec4(0.0); 
 highp float basePhase=px.x/max(res.x,1.)*.9+t*.15+.22*fbm3(q*1.5);
 float semW=uPre1.y;
 highp vec3 base=sm(eBD(basePhase),basePhase);
-highp float n=fbm(q*3.+t*.16),field=(1.-exp(-1.8*glow*(.75+.45*n)))*IFN;
+highp float n=fbm(q*3.+t*.16),field=(1.-exp(-1.8*glow*(.75+.45*n)))*INV_FIELD_NORM;
 float effPrism=uPre1.z,pPhase=0.,dPM=0.,dB=0.,sAr=0.,sDy=0.,cWv=0.,cPh=0.;vec3 dPT=vec3(0.);
 if(uDark<=.5||effPrism>.0001||abs(uSurge)>.0001)pPhase=uv.x*1.18-t*.18+.28*fbm3(q*2.1+vec2(0.,t*.12))+.14*y;
 if(effPrism>.0001||abs(uSurge)>.0001){
