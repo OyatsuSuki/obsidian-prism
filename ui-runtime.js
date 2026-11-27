@@ -1418,7 +1418,7 @@ EXT_ZH_UI_SEL;
           if (pv === undefined) { pv = null; const ch = p?.children; if (ch) for (let i = 1; i < ch.length; i++) if (ch[i] === c) { pv = ch[i - 1]; break; } }
           if ((vp && clHas(c, 'flex') && clHas(c, 'items-start') && (p === vp || clHas(p, 'flex-col'))) || BLEED_TRIGS.has(tidOf(pv)) || (clHas(c, 'flex') && clHas(c, 'flex-row') && clHas(p, 'flex-col'))) {
             next.add(c);
-            if (vp && !bleedEls.has(c) && !vps.has(vp)) { const pm = vm(vp), pt = vp.scrollTop || 0; vps.set(vp, { pm, pt, pin: !!(sc.isConvEntryPinActive?.(vp)) || pm - pt <= 140 }); }
+            if (vp && !bleedEls.has(c) && !vps.has(vp)) { const pm = vm(vp), pt = vp.scrollTop || 0; vps.set(vp, [pm, pt, !!(streamChoreoCtl.isConvEntryPinActive?.(vp)) || pm - pt <= 140]); }
           }
         }
         if (c === vp) break;
@@ -1426,7 +1426,7 @@ EXT_ZH_UI_SEL;
     }
     for (const e of bleedEls) if (!next.has(e)) { ra(e, A_BL); bleedEls.delete(e); }
     for (const e of next) { setAttrIfChanged(e, A_BL, '1'); bleedEls.add(e); }
-    for (const [vp, s] of vps) { const nm = vm(vp), d = nm - s.pm; if (s.pin) { if ((vp.scrollTop || 0) < nm - 1) vp.scrollTop = nm; } else if (d > 0) vp.scrollTop = s.pt + d; }
+    for (const [vp, [pm, pt, pin]] of vps) { const nm = vm(vp), d = nm - pm; if (pin) { if ((vp.scrollTop || 0) < nm - 1) vp.scrollTop = nm; } else if (d > 0) vp.scrollTop = pt + d; }
   };
 
   const AH_ID = 'ag-prism-host-alert-css', TS_A = 'data-ag-turbo-dedup', TI_A = 'data-ag-turbo-img';
