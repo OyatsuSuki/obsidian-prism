@@ -208,7 +208,7 @@
       releaseBackingStore() { pw = ph = 0; sleeping = paused = true; pR = pD = null; if (ok()) ch.post({ type: 'release' }); },
       draw(_w, _h, _d, timeSec, dark, intensity, presence, reach, prism, surge, speed, spec, sem, meta) {
         sleeping = Boolean(meta?.still); if (!sleeping) paused = false;
-        const hu = core.computeHorizonUniforms?.(Boolean(dark), presence, prism, surge, speed, spec, sem) || null;
+        const hu = core.computeHorizonUniforms?.(Boolean(dark), presence, prism, surge, speed, spec, sem, meta?.mist ? 1 : 0) || null;
         const m = { type: 'draw', dark: Boolean(dark), intensity, presence, reach, prism, surge, speed, spec, sem, hu, timeSec, still: sleeping, anim: Boolean(!sleeping && o.workerAutoLoop === true), continuous: Boolean(meta?.continuous), maxFps: getPerfProfile(doc).maxFps };
         if (ch.state().ready) ch.post(m); else pD = m;
       },

@@ -17,8 +17,12 @@ test('HORIZON_FRAGMENT_SHADER uses highp gradient/linear-light blend and 3-chann
   const fs = rippleCore.HORIZON_FRAGMENT_SHADER;
   assert.ok(fs.includes('precision mediump float;'));
   assert.ok(fs.includes('highp vec3 lmix('), 'linear-light blend prevents dark violet-blue midpoint dip');
-  assert.ok(fs.includes('highp float outAlpha='), 'highp alpha prevents 10-bit gradient banding');
+  assert.ok(fs.includes('if(uPre1.x>.5){'), 'silky mist horizon branch eliminates conversation rainbow stripes & halftone bands');
   assert.ok(fs.includes('highp vec3 d3=vec3('), '3-channel decorrelated TPDF dither breaks color steps');
+  const huMist = rippleCore.computeHorizonUniforms(true, 1, 0.5, 0, 1, 0, 0, 1);
+  const huHome = rippleCore.computeHorizonUniforms(true, 1, 0.5, 0, 1, 0, 0, 0);
+  assert.equal(huMist.pre1[0], 1, 'mist flag activates silky mist horizon path');
+  assert.equal(huHome.pre1[0], 0, 'home path leaves mist flag off');
 });
 
 test('convAura modes (breathe / static / off) control continuous flow, single-frame sleep, and unmount', () => {
