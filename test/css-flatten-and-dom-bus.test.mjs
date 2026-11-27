@@ -553,3 +553,37 @@ test('Issue #97 flexible model selector width, Blink CSS pruning, scoped motion=
   assert.ok(ch1Bytes < 390000, `Ch1 auto ${ch1Bytes} B must stay < 390,000 B`);
   assert.ok(refBytes < 4096, `configRefresh ${refBytes} B must stay < 4,096 B`);
 });
+
+test('Conversation viewport stability: bottom-16 content-visibility exemption & crab 75cqh bottom clearance parity', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
+  const flat = cssFlatten.flattenNestedCss(css);
+
+  // 1) Keep bottom 16 visible turns (and their nested thinking/tool/step/pre blocks) out of content-visibility:auto
+  //    so dynamic takeover/ask_question viewport height changes never trigger Chromium DisplayLock blanking.
+  const turnCvAnchor =
+    '[data-testid="conversation-view"] [data-testid="autoscroll-viewport"] .relative.flex.flex-col>div.flex.items-start:not(:nth-last-child(-n+16)):not([data-ag-cs-bleed="1"])';
+  assert.ok(css.includes(turnCvAnchor + '{content-visibility:auto;contain-intrinsic-size:auto 200px;'), 'raw style.css must scope turn content-visibility:auto outside bottom 16 turns');
+  assert.ok(
+    flat.includes(`html[data-ag-cs-style] ${turnCvAnchor}{content-visibility:auto;contain-intrinsic-size:auto 200px`),
+    'flattened CSS must emit scoped turn content-visibility:auto rule'
+  );
+  assert.ok(
+    flat.includes(`html[data-ag-cs-style] ${turnCvAnchor} :is([data-testid="thinking-collapsible-trigger"],[data-testid="tool-group-collapsible"],[data-testid="worked-for-collapsible"])[aria-expanded="true"]+div:not([data-ag-cs-bleed="1"]){content-visibility:auto;contain-intrinsic-size:auto 140px`),
+    'flattened CSS must scope expanded thinking/tool body content-visibility:auto inside >16-from-bottom turns'
+  );
+  assert.ok(
+    flat.includes(`html[data-ag-cs-style] ${turnCvAnchor} [data-markdown-root] pre:not(:last-child):not([data-ag-cs-bleed="1"]){content-visibility:auto;contain-intrinsic-size:auto 180px`),
+    'flattened CSS must scope markdown pre content-visibility:auto inside >16-from-bottom turns'
+  );
+
+  // 2) Eliminate double-counted native 48px spacer and recalibrate native 75cqh turn min-height under 76px crab clearance
+  const crabNonChat = 'html[data-ag-cs-style][data-ag-cs-has-crab="1"]:not([data-ag-prism-mode="chat"])';
+  assert.ok(
+    flat.includes(`${crabNonChat} [data-testid="conversation-view"] [data-testid="autoscroll-viewport"] .relative.flex.flex-col+.h-px+div[style*="height"]{height:0 !important`),
+    'flattened CSS must zero out duplicate native 48px bottom spacer when crab clearance is active'
+  );
+  assert.ok(
+    flat.includes(`${crabNonChat} [data-testid="conversation-view"] [data-testid="autoscroll-viewport"] .relative.flex.flex-col>div.flex.items-start[style*="75cqh"]{min-height:max(0px,calc(75cqh - 77px)) !important`),
+    'flattened CSS must recalibrate native 75cqh last-turn min-height to keep total footprint at 75cqh'
+  );
+});
