@@ -1596,30 +1596,31 @@ const vec3 ICE_MIST = vec3(0.839, 0.933, 1.000);
 const vec3 WARM_DARK_B = vec3(0.851, 0.467, 0.341);
 const vec3 MONO_DARK_HI = vec3(0.847, 0.878, 0.929);
 float sf(float t){return smoothstep(0.,1.,fract(t));}
-vec3 blueLoop(float x){
-float t=fract(x)*4.,f=sf(t);
-vec3 i=mix(DEEP_SPACE_BLUE,ZENITH_BLUE,.84),c=mix(SKY_BLUE,HAZE_BLUE,.35);
-return t<1.?mix(ZENITH_BLUE,i,f):t<2.?mix(i,SKY_BLUE,f):t<3.?mix(SKY_BLUE,c,f):mix(c,ZENITH_BLUE,f);
+highp vec3 lmix(highp vec3 a,highp vec3 b,highp float f){return sqrt(max(mix(a*a,b*b,clamp(f,0.,1.)),vec3(0.)));}
+highp vec3 blueLoop(highp float x){
+highp float t=fract(x)*4.,f=sf(t);
+highp vec3 i=lmix(DEEP_SPACE_BLUE,ZENITH_BLUE,.84),c=lmix(SKY_BLUE,HAZE_BLUE,.35);
+return t<1.?lmix(ZENITH_BLUE,i,f):t<2.?lmix(i,SKY_BLUE,f):t<3.?lmix(SKY_BLUE,c,f):lmix(c,ZENITH_BLUE,f);
 }
-vec3 prismLoop(float x){
-float t=fract(x)*7.,f=sf(t);
-vec3 cr=vec3(.94,.4,.48),am=vec3(.95,.64,.32);
-return t<1.?mix(PRISM_COBALT,PRISM_IRIS,f):t<2.?mix(PRISM_IRIS,cr,f):t<3.?mix(cr,am,f):t<4.?mix(am,cr,f):t<5.?mix(cr,PRISM_IRIS,f):t<6.?mix(PRISM_IRIS,SKY_BLUE,f):mix(SKY_BLUE,PRISM_COBALT,f);
+highp vec3 prismLoop(highp float x){
+highp float t=fract(x)*7.,f=sf(t);
+highp vec3 cr=vec3(.94,.4,.48),am=vec3(.95,.64,.32);
+return t<1.?lmix(PRISM_COBALT,PRISM_IRIS,f):t<2.?lmix(PRISM_IRIS,cr,f):t<3.?lmix(cr,am,f):t<4.?lmix(am,cr,f):t<5.?lmix(cr,PRISM_IRIS,f):t<6.?lmix(PRISM_IRIS,SKY_BLUE,f):lmix(SKY_BLUE,PRISM_COBALT,f);
 }
-vec3 neonLoop(float x){
-float t=fract(x)*4.,f=sf(t);
-vec3 m=vec3(.863,.361,.878);
-return t<1.?mix(SKY_BLUE,PRISM_IRIS,f):t<2.?mix(PRISM_IRIS,m,f):t<3.?mix(m,PRISM_COBALT,f):mix(PRISM_COBALT,SKY_BLUE,f);
+highp vec3 neonLoop(highp float x){
+highp float t=fract(x)*4.,f=sf(t);
+highp vec3 m=vec3(.863,.361,.878);
+return t<1.?lmix(SKY_BLUE,PRISM_IRIS,f):t<2.?lmix(PRISM_IRIS,m,f):t<3.?lmix(m,PRISM_COBALT,f):lmix(PRISM_COBALT,SKY_BLUE,f);
 }
 vec3 daylightInkLoop(float x){
 float t=fract(x)*5.,f=sf(t);
 return t<1.?mix(DAY_COBALT,DAY_IRIS,f):t<2.?mix(DAY_IRIS,DAY_CORAL,f):t<3.?mix(DAY_CORAL,DAY_AMBER,f):t<4.?mix(DAY_AMBER,DAY_CERULEAN,f):mix(DAY_CERULEAN,DAY_COBALT,f);
 }
-vec3 evalBaseDark(float ph){
-return uSpecModes.x>.5?mix(uBaseA,uBaseB,.5+.5*sin(ph*6.2831853)):blueLoop(ph);
+highp vec3 evalBaseDark(highp float ph){
+return uSpecModes.x>.5?lmix(uBaseA,uBaseB,.5+.5*sin(ph*6.2831853)):blueLoop(ph);
 }
-vec3 evalPrismDark(float ph){
-if(uSpecModes.y>.5)return uSpecModes.y>1.5?neonLoop(ph):mix(uPrismA,uPrismB,.5+.5*sin(ph*6.2831853+1.1));
+highp vec3 evalPrismDark(highp float ph){
+if(uSpecModes.y>.5)return uSpecModes.y>1.5?neonLoop(ph):lmix(uPrismA,uPrismB,.5+.5*sin(ph*6.2831853+1.1));
 return prismLoop(ph);
 }
 vec3 evalInkLight(float ph,float washPh){
@@ -1637,32 +1638,24 @@ highp vec2 uv = gl_FragCoord.xy / max(uRes, vec2(1.0));
 float reach = max(uReach, 0.01);
 float stretch = uPre1.w;
 float surgeUp = max(uSurge, 0.0);
-float y = uv.y / reach;
-float yCut = y - 0.25 * stretch;
-if (yCut > 1.6 + 0.22 * surgeUp) { outColor = vec4(0.0); return; }
-float topFeather = 1.0 - smoothstep(1.15 + 0.14 * surgeUp, 1.58 + 0.22 * surgeUp, yCut);
-highp float t = uTime;
-float waveA = sin(uv.x * 5.2 - t * 0.68);
-float waveB = sin(uv.x * 8.6 + t * 0.46 + 1.4);
-float curtain = 0.5 + 0.32 * waveA + 0.18 * waveB;
-float xEdge = mix(0.35, 1.0, smoothstep(0.0, 0.3, uv.x) * (1.0 - smoothstep(0.7, 1.0, uv.x)));
-float jutWave = (waveA * 0.65 + waveB * 0.35) * 0.24;
-float hMin = max(y + stretch * (0.36 * (-0.2975 + jutWave) - 0.048125), 0.0);
-float glowUpper = exp(-hMin * hMin * 4.0) * (0.76 + 0.42 * curtain) * xEdge;
-if (glowUpper * topFeather < 0.0008 && abs(uSurge) < 0.0001) { outColor = vec4(0.0); return; }
-highp vec2 px = gl_FragCoord.xy / max(uDpr, 0.5);
-highp vec2 res = uRes / max(uDpr, 0.5);
-highp vec2 p = (px - res * 0.5) / max(res.y, 1.0);
-highp vec2 q = p + 0.09 * vec2(fbm3(p * 2.0 + vec2(t * 0.16, 0.0)), fbm3(p * 2.0 + vec2(3.1, -t * 0.13))) - 0.045;
-float jut = (fbm3(vec2(px.x / 220.0 + t * 0.18, t * 0.11)) - 0.5) * 0.68 + jutWave;
-float h = max(y + stretch * (0.36 * jut + 0.11 * (fbm3(vec2(px.x / 90.0 - t * 0.21, t * 0.14 + 3.0)) - 0.5)), 0.0);
-float glow = exp(-h * h * 4.0) * (0.76 + 0.42 * curtain) * xEdge;
+highp float y=uv.y/reach,yCut=y-.25*stretch;
+if(yCut>1.6+.22*surgeUp){outColor=vec4(0.);return;}
+highp float topFeather=1.-smoothstep(1.15+.14*surgeUp,1.58+.22*surgeUp,yCut),t=uTime;
+highp float waveA=sin(uv.x*5.2-t*.68),waveB=sin(uv.x*8.6+t*.46+1.4),curtain=.5+.32*waveA+.18*waveB;
+highp float xEdge=mix(.35,1.,smoothstep(0.,.3,uv.x)*(1.-smoothstep(.7,1.,uv.x))),jutWave=(waveA*.65+waveB*.35)*.24;
+highp float hMin=max(y+stretch*(.36*(-.2975+jutWave)-.048125),0.);
+highp float glowUpper=exp(-hMin*hMin*4.)*(.76+.42*curtain)*xEdge;
+if(glowUpper * topFeather < 0.0008&&abs(uSurge)<.0001){outColor=vec4(0.);return;}
+highp vec2 px=gl_FragCoord.xy/max(uDpr,.5),res=uRes/max(uDpr,.5),p=(px-res*.5)/max(res.y,1.);
+highp vec2 q=p+.09*vec2(fbm3(p * 2.0+vec2(t*.16,0.)),fbm3(p * 2.0+vec2(3.1,-t*.13)))-.045;
+highp float jut=(fbm3(vec2(px.x/220.+t*.18,t*.11))-.5)*.68+jutWave;
+highp float h=max(y+stretch*(.36*jut+.11*(fbm3(vec2(px.x/90.-t*.21,t*.14+3.))-.5)),0.);
+highp float glow=exp(-h*h*4.)*(.76+.42*curtain)*xEdge;
 if (glow * topFeather < 0.0008 && abs(uSurge) < 0.0001) { outColor = vec4(0.0); return; }
-float basePhase = px.x / max(res.x, 1.0) * 0.9 + t * 0.15 + 0.22 * fbm3(q * 1.5);
-float semW = uPre1.y;
-vec3 base = sm(evalBaseDark(basePhase), basePhase);
-float n = fbm(q * 3.0 + t * 0.16);
-float field = (1.0 - exp(-1.8 * glow * (0.75 + 0.45 * n))) * INV_FIELD_NORM;
+highp float basePhase=px.x/max(res.x,1.)*.9+t*.15+.22*fbm3(q*1.5);
+float semW=uPre1.y;
+highp vec3 base=sm(evalBaseDark(basePhase),basePhase);
+highp float n=fbm(q*3.+t*.16),field=(1.-exp(-1.8*glow*(.75+.45*n)))*INV_FIELD_NORM;
 float effPrism = uPre1.z;
 float pPhase = 0.0;
 if (uDark <= 0.5 || effPrism > 0.0001 || abs(uSurge) > 0.0001) {
@@ -1731,15 +1724,16 @@ float washGain = mix(1.02, 1.62, clamp(uIntensity, 0.0, 1.0));
 a = clamp(field * 0.66 * washGain * effPres, 0.0, 0.84);
 da = clamp(dA * (0.52 + 0.44 * sqrt(a)) * effPres, 0.0, 0.88);
 }
-float outAlpha = clamp(a + da * (1.0 - a), 0.0, 1.0);
-vec3 premulRgb = clamp(c, 0.0, 1.0) * a * (1.0 - da) + clamp(dc, 0.0, 1.0) * da;
-if (outAlpha > 0.0015) {
-highp vec2 dp = gl_FragCoord.xy + fract(t * 3.0) * vec2(37.0, 19.0);
-float tpdf = ign(dp) - ign(dp.yx + vec2(11.3, 27.1));
-premulRgb += (tpdf / 255.0) * min(1.0, outAlpha * 2.5);
-outAlpha = clamp(outAlpha + tpdf * (0.5 / 255.0), 0.0, 1.0);
+highp float outAlpha=clamp(a+da*(1.-a),0.,1.);
+highp vec3 premulRgb=clamp(c,0.,1.)*a*(1.-da)+clamp(dc,0.,1.)*da;
+if(outAlpha>.0006){
+highp vec2 dp=gl_FragCoord.xy+fract(t*1.7)*vec2(37.,19.);
+highp vec3 d3=vec3(ign(dp)-ign(dp.yx+vec2(11.3,27.1)),ign(dp+vec2(17.1,31.7))-ign(dp.yx+vec2(43.9,7.3)),ign(dp+vec2(53.3,13.9))-ign(dp.yx+vec2(29.7,61.1)));
+highp float dF=smoothstep(.0006,.008,outAlpha);
+outAlpha=clamp(outAlpha+d3.x*(.85/255.)*dF,0.,1.);
+premulRgb=clamp(premulRgb+d3*(1.15/255.)*dF,vec3(0.),vec3(outAlpha));
 }
-outColor = clamp(vec4(premulRgb, outAlpha), 0.0, 1.0);
+outColor=clamp(vec4(premulRgb,outAlpha),0.,1.);
 }`;
   const GLOW_FRAG_SHADER = HORIZON_FRAGMENT_SHADER;
   const _H_BASE_D = [
@@ -1944,10 +1938,15 @@ outColor = clamp(vec4(premulRgb, outAlpha), 0.0, 1.0);
               G = cl255((baseG * (1 - hL) + (customMode ? baseG * 0.85 : 92) * hL) * wF + dotG * wD);
               B = cl255((baseB * (1 - hL) + (customMode ? baseB * 0.85 : 235) * hL) * wF + dotB * wD);
             }
-            const A = round(cl01(fillA + dotA * (1 - fillA)) * 255) & 255;
-            if (A === 0) continue;
-            const packed = LITTLE_ENDIAN ? ((A << 24) | (B << 16) | (G << 8) | R) >>> 0 : ((R << 24) | (G << 16) | (B << 8) | A) >>> 0;
-            for (let sy = 0; sy < step && py + sy < h; sy++) for (let sx = 0, ro = (py + sy) * w + px; sx < step && px + sx < w; sx++) pixels[ro + sx] = packed;
+            const baseA = cl01(fillA + dotA * (1 - fillA));
+            if (baseA < 0.001) continue;
+            for (let sy = 0; sy < step && py + sy < h; sy++) for (let sx = 0, yy = py + sy, ro = yy * w + px; sx < step && px + sx < w; sx++) {
+              const xx = px + sx, dn = (((xx * 17 + yy * 31) ^ (xx * 7 - yy * 13)) & 15) / 15 - 0.5;
+              const A = cl255(baseA * 255 + dn * 1.5);
+              if (A === 0) continue;
+              const dr = cl255(R + dn * 1.4), dg = cl255(G + dn * 1.4), db = cl255(B + dn * 1.4);
+              pixels[ro + sx] = LITTLE_ENDIAN ? ((A << 24) | (db << 16) | (dg << 8) | dr) >>> 0 : ((dr << 24) | (dg << 16) | (db << 8) | A) >>> 0;
+            }
           }
         }
         ctx.putImageData(image, 0, 0);
