@@ -466,9 +466,9 @@ const g=qGrp(qGs,model,gW()),gn=g?.name||g?.id||'',w5=qWin(g?.windows?.['5h']||g
 let s5=!!w5,sW=!!wW;if(quotaMode!=='both'&&w5&&wW){if(wW.r<w5.r)s5=false;else sW=false;}
 const setQ=(chip,id,w0,lbl,vis)=>{
 if(!chip)return;
-if(!w0){chip.hidden=true;rA(chip,DW);rA(chip,'title');sT(id,'—');return;}
+if(!w0){chip.hidden=true;rA(chip,DW);rA(chip,'aria-label');sT(id,'—');return;}
 const p=Math.round(w0.r*100),e=qEta(w0.t);
-chip.hidden=!vis;sT(id,`${p}%`);wLvl(chip,w0.r);sA(chip,'title',`${gn?gn+' · ':''}${lbl} ${p}%${e?` (${e})`:''}`);
+chip.hidden=!vis;sT(id,`${p}%`);wLvl(chip,w0.r);sA(chip,'aria-label',`${gn?gn+' · ':''}${lbl} ${p}%${e?` (${e})`:''}`);
 };
 setQ(it.fChip,'five-balance',w5,t.fiveShort,s5);setQ(it.wChip,'week-balance',wW,t.weekShort,sW);
 if(!s5&&!sW)sA(fbEl,'data-no-q','1');else rA(fbEl,'data-no-q');
