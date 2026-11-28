@@ -16,7 +16,7 @@
   const STUDIO_EXTRA_CSS =
     '.ag-cs-home-panel-body{display:flex;flex-direction:column;gap:12px;box-sizing:border-box;flex:auto;min-height:0;padding:14px;overflow:hidden auto}' +
     '.ag-cs-home-panel-head{flex-wrap:wrap;row-gap:8px}' +
-    '.ag-cs-home-tab,.ag-cs-home-range{white-space:nowrap}.ag-cs-home-ws-select{color-scheme:inherit}.ag-cs-home-ws-select option{background:var(--card,#141418);color:var(--foreground,#F2F2F5);}.agy-home{--_a:var(--ag-cs-accent);--_b:1px solid var(--_kb)}.ag-cs-hs-tg,.ag-cs-home-local-note{font-size:11px}.ag-cs-hs-tg{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:var(--_b);border-radius:6px;background:var(--_tb);color:var(--foreground);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;&:hover{background:var(--ag-cs-hover-wash)}&[aria-pressed="true"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 32%,#0000);background:color-mix(in srgb,currentColor 11%,#0000)}& svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}}:is(.ag-cs-home-ws-select,.ag-cs-hs-tg,.ag-cs-quota-refresh):focus-visible{outline:2px solid var(--_a);outline-offset:1px}.ag-cs-home-local-note{line-height:1.4;color:var(--muted-foreground);opacity:.86;padding-top:8px;border-top:var(--_b)}' +
+    '.ag-cs-home-tab,.ag-cs-home-range{white-space:nowrap}.ag-cs-home-ws-select{color-scheme:inherit}.ag-cs-home-ws-select option{background:var(--card,#141418);color:var(--foreground,#F2F2F5);}.agy-home{--_a:var(--ag-cs-accent);--_b:1px solid var(--_kb)}.ag-cs-hs-tg,.ag-cs-home-local-note{font-size:11px}.ag-cs-hs-tg{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:var(--_b);border-radius:6px;background:var(--_tb);color:var(--foreground);font-family:inherit;font-weight:500;white-space:nowrap;cursor:pointer;&:hover{background:var(--ag-cs-hover-wash)}&[aria-pressed="true"]{color:var(--_a);border-color:color-mix(in srgb,currentColor 32%,#0000);background:color-mix(in srgb,currentColor 11%,#0000)}& svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}}:is(.ag-cs-home-ws-select,.ag-cs-hs-tg,.ag-cs-quota-refresh):focus-visible{outline:2px solid var(--_a);outline-offset:1px}.ag-cs-home-local-note{line-height:1.4;color:var(--muted-foreground);opacity:.78}' +
     'html :is(.ag-cs-home-chart-seg,.ag-cs-home-model-swatch)[data-ag-mc]{background-color:var(--_mc-d);}:is(html[data-ag-cs-theme="light"],html>body:is(.theme-light,.light-theme,.light)) :is(.ag-cs-home-chart-seg,.ag-cs-home-model-swatch)[data-ag-mc]{background-color:var(--_mc-l);}';
 
   const MODEL_CAMP_PALETTES = {
@@ -808,7 +808,7 @@ tr|alt ajan|token||giriş|çıkış|Düşük Kota|Azalıyor|Yeterli|Sırada ne v
 
         if (isQuotasTab) { renderQuotasView(panel, lang, ui); return; }
 
-        const makeLocalNote = () => dv(HC + 'local-note', localNote, { 'data-local-scope-note': '1' });
+        const mkFt = (x) => ap(dv(HC + 'foot'), x, dv(HC + 'local-note', localNote, { 'data-local-scope-note': '1' }));
         const ac = fmtCnt(toNum(data.activeSessions));
         const ar = fmtCnt(arch);
         const sS = arch > 0 ? `${kA} ${ac} · ${kH} ${ar}` : !includeArchived ? actLbl : '';
@@ -854,11 +854,11 @@ tr|alt ajan|token||giriş|çıkış|Düşük Kota|Azalıyor|Yeterli|Sırada ne v
           ap(heat, heatTipEl);
           heat.addEventListener('mouseover', (ev) => { const t = ev.target?.closest?.('.' + HC + 'heat-cell'); if (t) showHeatTip(t, heat); });
           heat.addEventListener('mouseleave', hideHeatTip);
-          ap(panel, heat, data.funBook ? sp(HC + 'fun', data.funBook) : null, makeLocalNote());
+          ap(panel, heat, mkFt(data.funBook ? sp(HC + 'fun', data.funBook) : null));
         } else {
           const models = data.models || [];
           const emptyMsg = ui.noModelUsage || 'No model usage data yet';
-          if (models.length === 0) { ap(panel, dv(HC + 'models-empty', !includeArchived && arch > 0 ? `${emptyMsg} (${kH} ${ar})` : emptyMsg), makeLocalNote()); return; }
+          if (models.length === 0) { ap(panel, dv(HC + 'models-empty', !includeArchived && arch > 0 ? `${emptyMsg} (${kH} ${ar})` : emptyMsg), mkFt()); return; }
           const ids = models.map((m) => m.id);
           const columns = data.modelDays || [];
           const fmt = usageCore.homeShortDateFormat(lang);
@@ -956,7 +956,7 @@ tr|alt ajan|token||giriş|çıkış|Düşük Kota|Azalıyor|Yeterli|Sırada ne v
             const hc = models.length - shown.length;
             ap(listEl, bt(mC + 's-more', modelsExpanded ? ui.showLess || 'Show less' : isFn(ui.showMoreN) ? ui.showMoreN(hc) : `Show ${hc} more`, () => { modelsExpanded = !modelsExpanded; renderHomePanel(); }));
           }
-          ap(panel, listEl, makeLocalNote());
+          ap(panel, listEl, mkFt());
         }
       });
       if (focusSel) try { panel.querySelector?.(focusSel)?.focus?.(); } catch {}

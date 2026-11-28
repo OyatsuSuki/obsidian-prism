@@ -239,7 +239,7 @@ test('style.css excludes hover-card-popup from backdrop-filter and enforces Ligh
     'style.css must exclude [data-hover-card-popup] from backdrop-filter on both .agy-overlay and .surface-glass'
   );
   assert.ok(css.includes('padding-bottom:76px !important;'), 'conversation viewport must reserve 76px bottom clearance for dual mascots');
-  assert.ok(css.includes('padding-bottom:72px !important;'), 'studio home must reserve 72px bottom clearance for dual mascots');
+  assert.equal(css.includes('padding-bottom:72px !important;'), false, 'studio home must keep native bottom spacing above toolbar');
   assert.ok(css.includes('--muted-foreground:#4B5B73 !important;'), 'Crystal light muted foreground must meet WCAG AA contrast');
   assert.ok(css.includes('--muted-foreground:#574F45 !important;'), 'Alabaster light muted foreground must meet WCAG AA contrast');
 });

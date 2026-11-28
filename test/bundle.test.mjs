@@ -4205,21 +4205,21 @@ test('PR #114: home toolbarPlacement="top" gets 46px mascot clearance and z-inde
     const res = vm.runInNewContext(cdp.buildInjectExpression(cdp.DEFAULT_CONFIG), sandbox);
     assert.equal(res.status, 'ok');
     vm.runInNewContext(cdp.buildMascotChannelExpression(cdp.DEFAULT_CONFIG), sandbox);
-    assert.equal(topToolbarWrap.getAttribute('data-ag-cs-top-toolbar'), '1', 'home top toolbar wrapper must get data-ag-cs-top-toolbar');
-    assert.equal(topToolbarWrap.style.getPropertyValue('margin-bottom'), '46px', 'home top toolbar wrapper must reserve 46px for mascot');
+    assert.equal(topToolbarWrap.hasAttribute('data-ag-cs-top-toolbar'), false, 'home top toolbar wrapper must preserve native spacing without data-ag-cs-top-toolbar');
+    assert.equal(topToolbarWrap.style.getPropertyValue('margin-bottom'), '', 'home top toolbar wrapper must not add 46px margin-bottom');
     const crabStage = card.querySelector('.ag-cs-crab');
     assert.ok(crabStage, 'mascot stage must mount on home composer card');
     assert.equal(crabStage.getAttribute('data-ag-mascot-peek'), null, 'home top toolbar must NOT force mascot into peek mode');
 
     const cssSrc = fs.readFileSync(path.join(path.dirname(require.resolve('../cdp.js')), 'style.css'), 'utf8');
-    assert.ok(cssSrc.includes('[data-ag-cs-top-toolbar="1"]{margin-bottom:46px !important;position:relative !important;z-index:12 !important;}'), 'style.css must lower top toolbar z-index to 12 below mascot stage 22');
+    assert.equal(cssSrc.includes('[data-ag-cs-top-toolbar="1"]{margin-bottom:46px'), false, 'style.css must not force 46px gap on home top toolbar');
 
     sandbox.window.__agClaudeStyle.refreshConfig({ ...cdp.DEFAULT_CONFIG, mascot: 'off' });
-    assert.equal(topToolbarWrap.hasAttribute('data-ag-cs-top-toolbar'), false, 'mascot=off must clear data-ag-cs-top-toolbar');
-    assert.equal(topToolbarWrap.style.getPropertyValue('margin-bottom'), '', 'mascot=off must clear margin-bottom');
+    assert.equal(topToolbarWrap.hasAttribute('data-ag-cs-top-toolbar'), false);
+    assert.equal(topToolbarWrap.style.getPropertyValue('margin-bottom'), '');
 
-    sandbox.window.__agClaudeStyle.refreshConfig(cdp.DEFAULT_CONFIG);
-    assert.equal(topToolbarWrap.getAttribute('data-ag-cs-top-toolbar'), '1');
+    topToolbarWrap.setAttribute('data-ag-cs-top-toolbar', '1');
+    topToolbarWrap.style.setProperty('margin-bottom', '46px', 'important');
     vm.runInNewContext(cdp.REMOVE_EXPRESSION, sandbox);
     assert.equal(topToolbarWrap.hasAttribute('data-ag-cs-top-toolbar'), false, 'REMOVE_EXPRESSION must strip data-ag-cs-top-toolbar');
     assert.equal(topToolbarWrap.style.getPropertyValue('margin-bottom'), '', 'REMOVE_EXPRESSION must clear margin-bottom');

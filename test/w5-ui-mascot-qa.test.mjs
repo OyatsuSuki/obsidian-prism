@@ -424,8 +424,8 @@ test('2) PR #114 home top-toolbar clearance + ask_question frame-0 peek/pointer-
   try {
     env.flushRaf();
 
-    // PR #114: home top toolbar receives data-ag-cs-top-toolbar="1" and mascot stays full-height (NOT peek)
-    assert.equal(topToolbar.getAttribute('data-ag-cs-top-toolbar'), '1', 'Home top toolbar above composer must receive data-ag-cs-top-toolbar="1"');
+    // Home top toolbar preserves native spacing and mascot stays full-height (NOT peek)
+    assert.equal(topToolbar.hasAttribute('data-ag-cs-top-toolbar'), false, 'Home top toolbar above composer must preserve native spacing');
     const stage = composerCard.querySelector('.ag-cs-crab');
     assert.ok(stage, 'Mascot stage must mount on composer card');
     assert.equal(stage.hasAttribute('data-ag-mascot-peek'), false, 'Home top toolbar clearance must NOT trigger mascot peek');

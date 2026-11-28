@@ -829,7 +829,7 @@ if (metricsKey !== lastMetricsKey) { const hadPrev = lastMetricsKey !== ''; last
 
 // Composer Box & Clearance
 const _ts = (s) => `[data-testid="${s}"]`, T_TK = 'interaction-takeover-card', T_RP = 'running-items-panel', T_QM = 'queued-messages-card', T_SQ = 'side-question-panel', S_RP = _ts(T_RP), S_IB = _ts('agent-input-box'), S_SUB = `${_ts('subagent-tab-conversation')},${_ts('side-question-tab-conversation')}`; /* @host-compat */
-const TK_SEL = `${_ts(T_TK)}, ${_ts(T_SQ)}, .agy-takeover-frame`, S_AQO = _ts('ask-question-option'), A_Q = 'data-ag-cs-queued', A_QA = 'data-ag-queued-act', A_TK = 'data-ag-cs-takeover', A_TKO = A_TK + '-open', A_TT = 'data-ag-cs-top-toolbar', S_TB = _ts('input-box-bottom-toolbar'), A_PB = 'data-ag-cs-prism-box', A_PM = 'data-ag-cs-prism-mirror';
+const TK_SEL = `${_ts(T_TK)}, ${_ts(T_SQ)}, .agy-takeover-frame`, S_AQO = _ts('ask-question-option'), A_Q = 'data-ag-cs-queued', A_QA = 'data-ag-queued-act', A_TK = 'data-ag-cs-takeover', A_TKO = A_TK + '-open', A_TT = 'data-ag-cs-top-toolbar', A_PB = 'data-ag-cs-prism-box', A_PM = 'data-ag-cs-prism-mirror';
 const findTkCards = (sc) => {
 if (!sc) return [];
 const out = [], seen = new Set(), add = (e) => { if (e && !seen.has(e)) { seen.add(e); out.push(e); } };
@@ -897,17 +897,11 @@ let _lay, low = false, visTk = false, queuedAnchor = null, queuedRoofH = 0;
 const getLay = () => (_lay ??= (card?.offsetHeight || rc(card)?.height || 0) > 0), sh = cl(card, '#antigravity\\.agentSidePanelInputBox') || card[K_PE], ops = [];
 const pq = (el, ok) => { const on = ea && ok && !low; ops.push([el, A_Q, on, '46px']); if (on) low = true; };
 if (sh && sh !== ib) {
-let seenTt = false;
 for (const ch of sh.children || []) {
 if (ch === card) break;
 const p = tidOf(ch) === T_RP ? ch : qs(ch, S_RP);
 if (p) pq(ch, !!(isRunOpen(p) && !isHidEl(ch, false, m) && !isHidEl(p, false, m)));
-else {
-const tb = tidOf(ch) === 'input-box-bottom-toolbar' ? ch : qs(ch, S_TB);
-const ttOn = !!(ea && !seenTt && tb && !isHidEl(ch, getLay(), m) && !isHidEl(tb, getLay(), m));
-if (ttOn) seenTt = true;
-ops.push([ch, A_TT, ttOn, '46px']);
-}
+else if (ha(ch, A_TT)) ops.push([ch, A_TT, false, '46px']);
 }
 for (const oldTt of qa(sh, '[' + A_TT + ']')) if (!ops.some(([el, a]) => a === A_TT && el === oldTt)) ops.push([oldTt, A_TT, false, '46px']);
 }
